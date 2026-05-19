@@ -1,0 +1,20 @@
+# Library Management System — Cursor Rules
+
+## Architecture
+- All Supabase calls go through `src/services/*Service.ts` — never in pages or feature components.
+- `SUPABASE_SERVICE_ROLE_KEY` only in `src/services/supabase/admin.ts` and API routes that call RPCs.
+- API route order: auth → role check → Zod validation → business logic → sanitized error.
+
+## Queries
+- Never use `select('*')` — always list explicit columns.
+- Book queries must include `.is('deleted_at', null)`.
+- Paginate with `.range(offset, offset + pageSize - 1)` and `{ count: 'exact' }`.
+
+## Auth
+- No role picker on public registration — all signups are `member`.
+- Promote staff via SQL: `UPDATE profiles SET role = 'admin' WHERE email = '...'`.
+
+## UI
+- Use shadcn/ui components from `@/components/ui`.
+- Active nav link / accent: `text-brand` (see `--brand` in globals.css).
+- Skeleton loaders for data tables, not spinners.

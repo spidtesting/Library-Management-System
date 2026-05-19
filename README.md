@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Library Management System
 
-## Getting Started
+Production-grade public library app with **Admin**, **Librarian**, and **Member** portals.
 
-First, run the development server:
+## Stack
+
+- Next.js 15+ (App Router), TypeScript (strict), Tailwind CSS, shadcn/ui
+- Supabase (PostgreSQL, Auth, Storage, RLS)
+- react-hook-form + Zod, SWR, Recharts
+
+## Quick start
 
 ```bash
+cd ~/Developer/library-management-system
+cp .env.local.example .env.local
+# Fill in URL, publishable key (sb_publishable_...), and secret key (sb_secret_...)
+npm install @supabase/supabase-js @supabase/ssr
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+See [supabase/SUPABASE_SETUP.md](supabase/SUPABASE_SETUP.md) — run `supabase/library_schema.sql` in the Supabase SQL Editor before using the app.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Project structure
 
-## Learn More
+- `src/app/(admin)/admin/*` — Admin portal
+- `src/app/(librarian)/librarian/*` — Librarian portal
+- `src/app/(member)/member/*` — Member portal
+- `src/app/(auth)/*` — Login, register, forgot password
+- `src/services/*` — Supabase service layer (no DB calls in components)
+- `src/app/api/*` — Route handlers with auth + RLS/RPC
 
-To learn more about Next.js, take a look at the following resources:
+## Roles
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Role | Dashboard |
+|------|-----------|
+| admin | `/admin/dashboard` |
+| librarian | `/librarian/dashboard` |
+| member | `/member/dashboard` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Create admin user (recommended)
 
-## Deploy on Vercel
+1. In Supabase Dashboard → **Project Settings → API**, copy the **Secret** key (`sb_secret_...`).
+2. Put it in `.env.local` as `SUPABASE_SECRET_KEY` (must **not** be the publishable key).
+3. Run:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run create-admin
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Default login: `admin@library.local` / `LibraryAdmin123!`
+
+Custom email/password:
+
+```bash
+ADMIN_EMAIL=you@mail.com ADMIN_PASSWORD='YourPass123!' npm run create-admin
+```
+
+### If create-admin fails with "Database error creating new user"
+
+The auth trigger that creates `profiles` rows needs a one-time fix:
+
+1. Supabase Dashboard → **SQL Editor**
+2. Run all of [`supabase/fix-signup-trigger.sql`](supabase/fix-signup-trigger.sql)
+3. Run `npm run create-admin` again
+
+**Or** add the user in Dashboard → **Authentication → Users**, then:
+
+```bash
+ADMIN_EMAIL=you@mail.com npm run promote-admin
+```
+
+### Or promote an existing account (SQL)
+
+After registering in the app:
+
+```sql
+UPDATE profiles SET role = 'admin' WHERE email = 'you@example.com';
+```
+
+## Production
+
+See [CHECKLIST.md](CHECKLIST.md) for security, a11y, and deployment steps.
