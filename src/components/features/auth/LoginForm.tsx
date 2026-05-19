@@ -65,8 +65,31 @@ export function LoginForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <EmailField errors={errors} register={register} />
-      <PasswordField errors={errors} register={register} />
+      <div className="space-y-2">
+        <Label htmlFor="identifier">Email or NIC number</Label>
+        <Input
+          id="identifier"
+          type="text"
+          autoComplete="username"
+          placeholder="you@example.com or 951234567V"
+          {...register("identifier")}
+        />
+        {errors.identifier?.message && (
+          <p className="text-sm text-destructive">{errors.identifier.message}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          autoComplete="current-password"
+          {...register("password")}
+        />
+        {errors.password?.message && (
+          <p className="text-sm text-destructive">{errors.password.message}</p>
+        )}
+      </div>
       <div className="flex items-center gap-2">
         <Checkbox
           id="rememberMe"
@@ -85,52 +108,10 @@ export function LoginForm() {
         <Link href="/forgot-password" className="text-brand hover:underline">
           Forgot password?
         </Link>
-        {" · "}
-        <Link href="/register" className="text-brand hover:underline">
-          Create account
-        </Link>
+      </p>
+      <p className="text-center text-xs text-muted-foreground">
+        Library accounts are created by staff. Contact the library if you need access.
       </p>
     </form>
-  );
-}
-
-function EmailField({
-  errors,
-  register,
-}: {
-  errors: { email?: { message?: string } };
-  register: ReturnType<typeof useForm<LoginInput>>["register"];
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor="email">Email</Label>
-      <Input id="email" type="email" autoComplete="email" {...register("email")} />
-      {errors.email?.message && (
-        <p className="text-sm text-destructive">{errors.email.message}</p>
-      )}
-    </div>
-  );
-}
-
-function PasswordField({
-  errors,
-  register,
-}: {
-  errors: { password?: { message?: string } };
-  register: ReturnType<typeof useForm<LoginInput>>["register"];
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor="password">Password</Label>
-      <Input
-        id="password"
-        type="password"
-        autoComplete="current-password"
-        {...register("password")}
-      />
-      {errors.password?.message && (
-        <p className="text-sm text-destructive">{errors.password.message}</p>
-      )}
-    </div>
   );
 }

@@ -1,10 +1,27 @@
 import { z } from "zod";
 
+export const nicNumberSchema = z
+  .string()
+  .min(9, "NIC must be at least 9 characters")
+  .max(12, "NIC must be at most 12 characters")
+  .regex(/^[A-Za-z0-9]+$/, "NIC must contain only letters and numbers");
+
 export const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  identifier: z.string().min(1, "Email or NIC is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   rememberMe: z.boolean().optional(),
 });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(6, "Current password is required"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.newPassword === d.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const registerSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -87,6 +104,7 @@ export const profileSelfUpdateSchema = z.object({
 
 export const memberCreateSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
+  nic_number: nicNumberSchema,
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.preprocess(
@@ -127,3 +145,4 @@ export type SettingsInput = z.infer<typeof settingsSchema>;
 export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
 export type MemberUpdateInput = z.infer<typeof memberUpdateSchema>;
 export type ProfileSelfUpdateInput = z.infer<typeof profileSelfUpdateSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;

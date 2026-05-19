@@ -3,8 +3,7 @@ import type { Profile } from "@/types";
 import type { ProfileSelfUpdateInput } from "@/lib/validations";
 import { emptyToNull } from "@/lib/sanitize-input";
 
-const PROFILE_COLUMNS =
-  "id, role, full_name, email, phone, address, avatar_url, borrow_token_limit, borrow_tokens_used, is_active, created_at, updated_at";
+import { PROFILE_COLUMNS } from "@/lib/profile-columns";
 
 export async function getOwnProfile(userId: string): Promise<Profile | null> {
   const supabase = await createClient();

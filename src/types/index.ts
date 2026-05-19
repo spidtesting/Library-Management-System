@@ -22,6 +22,7 @@ export interface Profile {
   role: UserRole;
   full_name: string;
   email: string;
+  nic_number: string | null;
   phone: string | null;
   address: string | null;
   avatar_url: string | null;

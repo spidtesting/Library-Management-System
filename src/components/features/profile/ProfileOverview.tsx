@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { UserAvatar } from "./UserAvatar";
 import { formatDate } from "@/utils/formatDate";
-import { Mail, Phone, MapPin, Calendar, type LucideIcon } from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, CreditCard, type LucideIcon } from "lucide-react";
 
 export function ProfileOverview({ profile }: { profile: Profile }) {
   const isMember = profile.role === "member";
@@ -34,6 +34,20 @@ export function ProfileOverview({ profile }: { profile: Profile }) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
         <ProfileDetail icon={Mail} label="Email" value={profile.email} />
+        {isMember && profile.nic_number && (
+          <ProfileDetail
+            icon={CreditCard}
+            label="NIC number"
+            value={profile.nic_number}
+          />
+        )}
+        {isMember && profile.nic_number && (
+          <ProfileDetail
+            icon={CreditCard}
+            label="NIC number"
+            value={profile.nic_number}
+          />
+        )}
         <ProfileDetail
           icon={Phone}
           label="Phone"

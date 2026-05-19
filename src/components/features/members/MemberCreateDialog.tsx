@@ -35,6 +35,7 @@ export function MemberCreateDialog() {
     resolver: zodResolver(memberCreateSchema),
     defaultValues: {
       full_name: "",
+      nic_number: "",
       email: "",
       password: "",
       phone: "",
@@ -75,12 +76,20 @@ export function MemberCreateDialog() {
         <DialogHeader>
           <DialogTitle>Add library member</DialogTitle>
           <DialogDescription>
-            Creates a login account and member profile. They can sign in with this email and password.
+            Creates a login account and member profile. They can sign in with NIC or email and the password you set.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Field label="Full name" id="create-full_name" error={errors.full_name?.message}>
             <Input id="create-full_name" {...register("full_name")} />
+          </Field>
+          <Field label="NIC number" id="create-nic_number" error={errors.nic_number?.message}>
+            <Input
+              id="create-nic_number"
+              placeholder="951234567V"
+              autoComplete="off"
+              {...register("nic_number")}
+            />
           </Field>
           <Field label="Email" id="create-email" error={errors.email?.message}>
             <Input id="create-email" type="email" autoComplete="off" {...register("email")} />

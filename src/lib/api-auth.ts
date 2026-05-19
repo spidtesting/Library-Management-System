@@ -1,4 +1,5 @@
 import { createClient } from "@/services/supabase/server";
+import { PROFILE_COLUMNS } from "@/lib/profile-columns";
 import type { Profile, UserRole } from "@/types";
 import { apiError } from "@/utils/handleError";
 
@@ -17,9 +18,7 @@ export async function requireAuth(): Promise<
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select(
-      "id, role, full_name, email, phone, address, avatar_url, borrow_token_limit, borrow_tokens_used, is_active, created_at, updated_at"
-    )
+    .select(PROFILE_COLUMNS)
     .eq("id", user.id)
     .single();
 

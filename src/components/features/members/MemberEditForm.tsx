@@ -74,6 +74,11 @@ export function MemberEditForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-md space-y-4">
       <div className="space-y-2">
+        <Label>NIC number</Label>
+        <Input value={member.nic_number ?? "—"} disabled className="bg-muted font-mono" />
+        <p className="text-xs text-muted-foreground">NIC cannot be changed after creation.</p>
+      </div>
+      <div className="space-y-2">
         <Label>Email</Label>
         <Input value={member.email} disabled className="bg-muted" />
       </div>

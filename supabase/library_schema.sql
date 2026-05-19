@@ -49,6 +49,7 @@ CREATE TABLE profiles (
   role              user_role   NOT NULL DEFAULT 'member',
   full_name         TEXT        NOT NULL,
   email             TEXT        NOT NULL UNIQUE,
+  nic_number        TEXT        UNIQUE,                 -- National ID; login with NIC or email
   phone             TEXT,
   address           TEXT,
   avatar_url        TEXT,                          -- Supabase Storage public URL

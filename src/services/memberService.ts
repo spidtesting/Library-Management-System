@@ -4,9 +4,8 @@ import type { Profile, IssuedBook, PaginatedResponse } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { emptyToNull } from "@/lib/sanitize-input";
 import type { MemberCreateInput } from "@/lib/validations";
-
-const PROFILE_COLUMNS =
-  "id, role, full_name, email, phone, address, avatar_url, borrow_token_limit, borrow_tokens_used, is_active, created_at, updated_at";
+import { PROFILE_COLUMNS } from "@/lib/profile-columns";
+import { normalizeNic } from "@/lib/nic";
 
 export async function getMembers(params: {
   page?: number;
@@ -132,7 +131,8 @@ export async function createMember(input: MemberCreateInput): Promise<Profile> {
   const userId = created.user.id;
   const profilePayload = {
     id: userId,
-    email: input.email,
+    email: input.email.toLowerCase(),
+    nic_number: normalizeNic(input.nic_number),
     full_name: input.full_name,
     role: "member" as const,
     phone: input.phone ?? null,
@@ -150,6 +150,10 @@ export async function createMember(input: MemberCreateInput): Promise<Profile> {
 
   if (profileError) {
     await admin.auth.admin.deleteUser(userId);
+    const msg = profileError.message.toLowerCase();
+    if (msg.includes("nic_number") || msg.includes("unique")) {
+      throw new Error("A member with this NIC number already exists");
+    }
     throw new Error(`createMember profile failed: ${profileError.message}`);
   }
 

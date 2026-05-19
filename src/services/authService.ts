@@ -2,18 +2,52 @@ import { createClient } from "@/services/supabase/client";
 import type { Profile } from "@/types";
 import { ROLE_DASHBOARD } from "@/lib/constants";
 import type { LoginInput, RegisterInput } from "@/lib/validations";
+import { PROFILE_COLUMNS } from "@/lib/profile-columns";
+import { isEmailIdentifier } from "@/lib/nic";
 
-const PROFILE_COLUMNS =
-  "id, role, full_name, email, phone, address, avatar_url, borrow_token_limit, borrow_tokens_used, is_active, created_at, updated_at";
-
-export async function signIn({ email, password }: LoginInput) {
+export async function signIn({ identifier, password }: LoginInput) {
   const supabase = createClient();
+  let email = identifier.trim();
+
+  if (!isEmailIdentifier(email)) {
+    const resolved = await fetch("/api/auth/resolve-identifier", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier }),
+    });
+    if (!resolved.ok) {
+      throw new Error("Invalid email/NIC or password");
+    }
+    const data = (await resolved.json()) as { email?: string };
+    if (!data.email) throw new Error("Invalid email/NIC or password");
+    email = data.email;
+  } else {
+    email = email.toLowerCase();
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message === "Invalid login credentials" ? "Invalid email/NIC or password" : error.message);
   return data;
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) throw new Error("Not signed in");
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword,
+  });
+  if (verifyError) throw new Error("Current password is incorrect");
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw new Error(error.message);
 }
 
 export async function signUp({ email, password, fullName }: RegisterInput) {

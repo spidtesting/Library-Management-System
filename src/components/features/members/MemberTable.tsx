@@ -92,6 +92,7 @@ export function MemberTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            <TableHead>NIC</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Tokens</TableHead>
             <TableHead>Borrow access</TableHead>
@@ -108,6 +109,9 @@ export function MemberTable({
                 >
                   {m.full_name}
                 </Link>
+              </TableCell>
+              <TableCell className="font-mono text-sm text-muted-foreground">
+                {m.nic_number ?? "—"}
               </TableCell>
               <TableCell className="text-muted-foreground">{m.email}</TableCell>
               <TableCell>
