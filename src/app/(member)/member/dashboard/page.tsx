@@ -7,7 +7,7 @@ import { getMemberFines } from "@/services/fineService";
 import { getSettings } from "@/services/settingsService";
 import { StatCard } from "@/components/features/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, getDueDateStatus } from "@/utils/formatDate";
 import { calculateFine } from "@/utils/calculateFine";
@@ -46,12 +46,13 @@ export default async function MemberDashboardPage() {
         title="My dashboard"
         description={`Welcome, ${profile.full_name}`}
         action={
-          <Button asChild className="gap-2">
-            <Link href="/member/browse">
-              <Search className="h-4 w-4" />
-              Search catalogue
-            </Link>
-          </Button>
+          <Link
+            href="/member/browse"
+            className={cn(buttonVariants(), "gap-2")}
+          >
+            <Search className="h-4 w-4" />
+            Search catalogue
+          </Link>
         }
       />
 
@@ -94,9 +95,12 @@ export default async function MemberDashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle>Active borrows</CardTitle>
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/member/browse">Browse books</Link>
-            </Button>
+            <Link
+              href="/member/browse"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              Browse books
+            </Link>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2">
             {borrows.map((b) => (

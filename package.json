@@ -9,7 +9,8 @@
     "lint": "eslint",
     "create-admin": "node scripts/create-admin.mjs",
     "promote-admin": "node scripts/promote-admin.mjs",
-    "fix-auth-trigger": "node scripts/fix-auth-trigger.mjs"
+    "fix-auth-trigger": "node scripts/fix-auth-trigger.mjs",
+    "apply-nic-migration": "node scripts/apply-nic-migration.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
