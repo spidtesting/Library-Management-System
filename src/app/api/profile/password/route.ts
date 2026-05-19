@@ -1,4 +1,4 @@
-import { requireAuth, isAuthResult } from "@/lib/api-auth";
+import { requireAuth, isAuthResult, requireRole } from "@/lib/api-auth";
 import { changePasswordSchema } from "@/lib/validations";
 import { changePasswordServer } from "@/services/passwordService";
 import { apiError, apiSuccess, sanitizeError } from "@/utils/handleError";
@@ -6,6 +6,9 @@ import { apiError, apiSuccess, sanitizeError } from "@/utils/handleError";
 export async function PATCH(request: Request) {
   const auth = await requireAuth();
   if (!isAuthResult(auth)) return auth;
+
+  const forbidden = requireRole(auth.profile, ["member"]);
+  if (forbidden) return forbidden;
 
   try {
     const body = await request.json();

@@ -21,7 +21,7 @@ import {
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
-import type { IssuedBook, Profile } from "@/types";
+import type { IssuedBook } from "@/types";
 
 export const metadata: Metadata = { title: "Dashboard | Member" };
 
@@ -45,7 +45,7 @@ export default async function MemberDashboardPage() {
       <PageHeader
         title="My dashboard"
         description={`Welcome, ${profile.full_name}`}
-        actions={
+        action={
           <Button asChild className="gap-2">
             <Link href="/member/browse">
               <Search className="h-4 w-4" />
@@ -55,34 +55,42 @@ export default async function MemberDashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Tokens available"
           value={tokensAvailable}
           description={`${profile.borrow_tokens_used} of ${profile.borrow_token_limit} in use`}
-          icon={Coins}
+          icon={Library}
         />
         <StatCard
           title="Books out"
           value={borrows.length}
-          description="Active borrows"
+          description={borrows.length === 1 ? "Active borrow" : "Active borrows"}
           icon={BookOpen}
         />
         <StatCard
           title="Pending fines"
           value={`$${finesTotal.toFixed(2)}`}
-          description={pendingFines.length > 0 ? `${pendingFines.length} unpaid` : "All clear"}
-          icon={Library}
+          description={
+            pendingFines.length > 0
+              ? `${pendingFines.length} unpaid fine(s)`
+              : "No outstanding fines"
+          }
+          icon={Coins}
         />
         <StatCard
           title="Borrow access"
           value={profile.is_active ? "Can borrow" : "Blocked"}
-          description={profile.is_active ? "Your account is active" : "Contact the library"}
+          description={
+            profile.is_active
+              ? "You can issue and reserve books"
+              : "Contact the library to restore access"
+          }
           icon={profile.is_active ? ShieldCheck : ShieldOff}
         />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <CardTitle>Active borrows</CardTitle>
@@ -99,8 +107,12 @@ export default async function MemberDashboardPage() {
               />
             ))}
             {borrows.length === 0 && (
-              <p className="col-span-full text-sm text-muted-foreground">
-                No active borrows. Search the catalogue to find your next read.
+              <p className="text-muted-foreground text-sm sm:col-span-2">
+                No active borrows.{" "}
+                <Link href="/member/browse" className="text-brand underline">
+                  Search the catalogue
+                </Link>{" "}
+                to find your next read.
               </p>
             )}
           </CardContent>
@@ -112,7 +124,7 @@ export default async function MemberDashboardPage() {
               <CardTitle>Pending fines</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm">
+              <ul className="text-sm space-y-2">
                 {pendingFines.map((f) => (
                   <li key={f.id} className="flex justify-between gap-2">
                     <span>{f.overdue_days} days overdue</span>
@@ -128,7 +140,7 @@ export default async function MemberDashboardPage() {
             </CardContent>
           </Card>
         )}
-      </motiondiv>
+      </div>
 
       <RecentlyViewed className="mt-6" />
     </div>
@@ -144,6 +156,7 @@ function BorrowCard({
 }) {
   const status = getDueDateStatus(borrow.due_date);
   const fine = calculateFine(borrow.due_date, finePerDay);
+
   const statusLabel =
     status === "overdue"
       ? "Overdue"
@@ -151,35 +164,37 @@ function BorrowCard({
         ? "Due soon"
         : "On time";
 
+  const statusVariant =
+    status === "overdue"
+      ? "destructive"
+      : status === "warning"
+        ? "secondary"
+        : "outline";
+
   return (
     <div
       className={cn(
-        "rounded-lg border p-3 text-sm space-y-1",
+        "rounded-lg border p-3 text-sm space-y-2",
         status === "overdue" && "border-destructive/50 bg-destructive/5",
         status === "warning" && "border-brand/50 bg-brand/5"
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium leading-snug">{borrow.book?.title ?? "Book"}</p>
-        <Badge
-          variant={
-            status === "overdue"
-              ? "destructive"
-              : status === "warning"
-                ? "secondary"
-                : "outline"
-          }
-          className="shrink-0 text-xs"
-        >
+        <Badge variant={statusVariant} className="shrink-0 text-xs">
           {statusLabel}
         </Badge>
       </div>
-      <p className="text-muted-foreground">Issued {formatDate(borrow.issue_date)}</p>
-      <p className="text-muted-foreground">Due {formatDate(borrow.due_date)}</p>
+      <p className="text-muted-foreground text-xs">
+        Issued {formatDate(borrow.issue_date)}
+      </p>
+      <p className="text-muted-foreground">
+        Due <span className="font-medium text-foreground">{formatDate(borrow.due_date)}</span>
+      </p>
       {fine.isOverdue && (
-        <p className="text-destructive font-medium">
+        <p className="text-destructive text-xs">
           Est. late fee: ${fine.amount.toFixed(2)} ({fine.overdueDays} day
-          {fine.overdueDays === 1 ? "" : "s"})
+          {fine.overdueDays === 1 ? "" : "s"} × ${finePerDay.toFixed(2)}/day)
         </p>
       )}
     </div>

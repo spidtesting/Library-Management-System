@@ -41,13 +41,6 @@ export function ProfileOverview({ profile }: { profile: Profile }) {
             value={profile.nic_number}
           />
         )}
-        {isMember && profile.nic_number && (
-          <ProfileDetail
-            icon={CreditCard}
-            label="NIC number"
-            value={profile.nic_number}
-          />
-        )}
         <ProfileDetail
           icon={Phone}
           label="Phone"
