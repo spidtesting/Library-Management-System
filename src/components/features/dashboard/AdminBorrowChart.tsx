@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { format, parseISO } from "date-fns";
 import { BookMarked, RotateCcw, TrendingUp } from "lucide-react";
@@ -25,6 +25,8 @@ const ResponsiveContainer = dynamic(
   () => import("recharts").then((m) => m.ResponsiveContainer),
   { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-xl" /> }
 );
+
+const CHART_HEIGHT = 288;
 
 function formatMonthLabel(month: string) {
   try {
@@ -168,6 +170,12 @@ export function AdminBorrowChart({
   className?: string;
   showSummary?: boolean;
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const chartData = useMemo<ChartPoint[]>(
     () =>
       data.map((d) => ({
@@ -225,65 +233,76 @@ export function AdminBorrowChart({
         </div>
       )}
 
-      <div className="relative h-72 w-full min-w-0 overflow-hidden rounded-xl border bg-gradient-to-b from-muted/30 via-background to-background p-2 pt-4 sm:p-4 sm:pt-6">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={chartData}
-            margin={{ top: 4, right: 4, left: -12, bottom: 0 }}
-            barGap={6}
-            barCategoryGap="22%"
-          >
-            <defs>
-              <linearGradient id="borrowIssuedGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={1} />
-                <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.55} />
-              </linearGradient>
-              <linearGradient id="borrowReturnedGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={1} />
-                <stop offset="100%" stopColor="var(--chart-3)" stopOpacity={0.55} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              vertical={false}
-              stroke="var(--border)"
-              strokeDasharray="4 6"
-              strokeOpacity={0.8}
-            />
-            <XAxis
-              dataKey="monthLabel"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-              dy={10}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
-              allowDecimals={false}
-              width={36}
-            />
-            <Tooltip
-              content={<ChartTooltip />}
-              cursor={{ fill: "var(--muted)", opacity: 0.35, radius: 8 }}
-            />
-            <Legend content={<ChartLegend />} />
-            <Bar
-              dataKey="issued"
-              fill="url(#borrowIssuedGradient)"
-              name="Issued"
-              radius={[6, 6, 0, 0]}
-              maxBarSize={36}
-            />
-            <Bar
-              dataKey="returned"
-              fill="url(#borrowReturnedGradient)"
-              name="Returned"
-              radius={[6, 6, 0, 0]}
-              maxBarSize={36}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="rounded-xl border bg-gradient-to-b from-muted/30 via-background to-background p-4 sm:p-5">
+        <div className="h-72 min-h-72 w-full min-w-0">
+          {!mounted ? (
+            <Skeleton className="h-full w-full rounded-lg" />
+          ) : (
+            <ResponsiveContainer
+              width="100%"
+              height={CHART_HEIGHT}
+              minHeight={CHART_HEIGHT}
+              minWidth={0}
+            >
+              <BarChart
+                data={chartData}
+                margin={{ top: 4, right: 4, left: -12, bottom: 0 }}
+                barGap={6}
+                barCategoryGap="22%"
+              >
+                <defs>
+                  <linearGradient id="borrowIssuedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.55} />
+                  </linearGradient>
+                  <linearGradient id="borrowReturnedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-3)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--chart-3)" stopOpacity={0.55} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  vertical={false}
+                  stroke="var(--border)"
+                  strokeDasharray="4 6"
+                  strokeOpacity={0.8}
+                />
+                <XAxis
+                  dataKey="monthLabel"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  dy={10}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                  allowDecimals={false}
+                  width={36}
+                />
+                <Tooltip
+                  content={<ChartTooltip />}
+                  cursor={{ fill: "var(--muted)", opacity: 0.35, radius: 8 }}
+                />
+                <Legend content={<ChartLegend />} />
+                <Bar
+                  dataKey="issued"
+                  fill="url(#borrowIssuedGradient)"
+                  name="Issued"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={36}
+                />
+                <Bar
+                  dataKey="returned"
+                  fill="url(#borrowReturnedGradient)"
+                  name="Returned"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={36}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
       </div>
     </div>
   );

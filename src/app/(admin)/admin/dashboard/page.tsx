@@ -44,11 +44,11 @@ export default async function AdminDashboardPage() {
         <StatCard title="Pending fines" value={`$${Number(stats.pending_fines).toFixed(2)}`} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Monthly borrowing trend</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="min-w-0">
             <AdminBorrowChart data={trend} />
           </CardContent>
         </Card>
