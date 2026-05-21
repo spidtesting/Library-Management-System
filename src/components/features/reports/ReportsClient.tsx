@@ -20,7 +20,7 @@ import { exportCsv } from "@/utils/exportCsv";
 import { formatDate } from "@/utils/formatDate";
 import type { ReportsData } from "@/services/reportService";
 import type { ActiveBorrow, Book, BorrowHistoryRow, Fine, Profile } from "@/types";
-import { Download, Search, ArrowUpRight, ArrowDownLeft, Wallet, Clock } from "lucide-react";
+import { Download, Search, ArrowUpRight, ArrowDownLeft, Wallet, Clock, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -245,11 +245,31 @@ export function ReportsClient({ data }: { data: ReportsData }) {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <Card className="border-brand/20">
-            <CardHeader className="border-b border-brand/10 bg-brand/[0.03]">
-              <CardTitle className="text-brand">Monthly borrowing trend</CardTitle>
+          <Card className="overflow-hidden border-brand/20 shadow-sm">
+            <CardHeader className="border-b border-brand/10 bg-gradient-to-r from-brand/[0.07] via-brand/[0.03] to-transparent pb-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-brand">
+                    <TrendingUp className="h-5 w-5 shrink-0" aria-hidden />
+                    Monthly borrowing trend
+                  </CardTitle>
+                  <p className="mt-1.5 max-w-xl text-sm text-muted-foreground">
+                    Compare books issued vs returned each month. Hover bars for exact counts.
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-brand/25 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand">
+                    <span className="h-2 w-2 rounded-full bg-[var(--chart-1)]" />
+                    Issued
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    <span className="h-2 w-2 rounded-full bg-[var(--chart-3)]" />
+                    Returned
+                  </span>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 sm:p-6">
               <AdminBorrowChart data={trend} />
             </CardContent>
           </Card>
