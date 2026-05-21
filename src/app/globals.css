@@ -148,4 +148,8 @@
     min-height: 2.75rem;
     min-width: 2.75rem;
   }
+  .overscroll-x-contain {
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }

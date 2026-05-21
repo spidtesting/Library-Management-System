@@ -25,6 +25,7 @@ import type { ActiveBorrow, Book, BorrowHistoryRow, Fine, Profile } from "@/type
 import { Download, Search, ArrowUpRight, ArrowDownLeft, Wallet, Clock, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ResponsiveTableShell } from "@/components/ui/responsive-table-shell";
 
 function csvDate() {
   return new Date().toISOString().slice(0, 10);
@@ -104,7 +105,7 @@ function ReportToolbar({
 }) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="relative w-full flex-1 min-w-0">
+      <div className="relative w-full flex-1 sm:max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -114,13 +115,13 @@ function ReportToolbar({
           aria-label="Search report"
         />
       </div>
-      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:justify-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
         <span className="text-sm text-muted-foreground tabular-nums">{count} rows</span>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-10 w-full gap-2 sm:w-auto"
+          className="h-11 w-full gap-2 sm:h-9 sm:w-auto"
           onClick={onExport}
         >
           <Download className="h-4 w-4" />
@@ -223,11 +224,11 @@ export function ReportsClient({ data }: { data: ReportsData }) {
       <ReportsSummary stats={stats} />
 
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="flex h-auto flex-wrap gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="overview" className={tabAccent.overview}>
+        <TabsList className="flex h-auto max-w-full flex-nowrap gap-1 overflow-x-auto bg-muted/50 p-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="overview" className={cn("shrink-0", tabAccent.overview)}>
             Overview
           </TabsTrigger>
-          <TabsTrigger value="overdue" className={tabAccent.overdue}>
+          <TabsTrigger value="overdue" className={cn("shrink-0", tabAccent.overdue)}>
             Overdue
             {overdue.length > 0 && (
               <Badge variant="destructive" className="ml-2">
@@ -235,19 +236,19 @@ export function ReportsClient({ data }: { data: ReportsData }) {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="active" className={tabAccent.active}>
+          <TabsTrigger value="active" className={cn("shrink-0", tabAccent.active)}>
             Active loans
           </TabsTrigger>
-          <TabsTrigger value="inventory" className={tabAccent.inventory}>
+          <TabsTrigger value="inventory" className={cn("shrink-0", tabAccent.inventory)}>
             Inventory
           </TabsTrigger>
-          <TabsTrigger value="history" className={tabAccent.history}>
+          <TabsTrigger value="history" className={cn("shrink-0", tabAccent.history)}>
             History
           </TabsTrigger>
-          <TabsTrigger value="fines" className={tabAccent.fines}>
+          <TabsTrigger value="fines" className={cn("shrink-0", tabAccent.fines)}>
             Fines
           </TabsTrigger>
-          <TabsTrigger value="members" className={tabAccent.members}>
+          <TabsTrigger value="members" className={cn("shrink-0", tabAccent.members)}>
             Members
           </TabsTrigger>
         </TabsList>
@@ -548,7 +549,7 @@ function ReportCard({
           count={count}
           onExport={onExport}
         />
-        <div className="overflow-x-auto rounded-md border">{children}</div>
+        <ResponsiveTableShell>{children}</ResponsiveTableShell>
       </div>
     </SectionCard>
   );

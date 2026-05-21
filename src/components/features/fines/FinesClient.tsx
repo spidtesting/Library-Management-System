@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 import { parseApiResponse } from "@/lib/parse-api-response";
 import { fineStatusBadgeClass } from "@/lib/status-badges";
 import { cn } from "@/lib/utils";
+import { ResponsiveTableShell } from "@/components/ui/responsive-table-shell";
 
 export function FinesClient({ fines: initial }: { fines: Fine[] }) {
   const router = useRouter();
@@ -64,7 +65,7 @@ export function FinesClient({ fines: initial }: { fines: Fine[] }) {
             <SelectItem value="waived">Waived</SelectItem>
           </SelectContent>
         </Select>
-        <div className="overflow-x-auto rounded-md border">
+        <ResponsiveTableShell>
           <Table>
             <caption className="sr-only">Fines</caption>
             <TableHeader>
@@ -108,15 +109,16 @@ export function FinesClient({ fines: initial }: { fines: Fine[] }) {
                   <TableCell className="text-muted-foreground text-sm">
                     {formatDate(fine.created_at)}
                   </TableCell>
-                  <TableCell className="space-x-2">
+                  <TableCell className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
                     {fine.status === "pending" && (
                       <>
-                        <Button size="sm" onClick={() => handleAction(fine.id, "pay")}>
+                        <Button size="sm" className="h-10 w-full sm:w-auto" onClick={() => handleAction(fine.id, "pay")}>
                           Pay
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
+                          className="h-10 w-full sm:w-auto"
                           onClick={() => handleAction(fine.id, "waive")}
                         >
                           Waive
@@ -135,7 +137,7 @@ export function FinesClient({ fines: initial }: { fines: Fine[] }) {
               )}
             </TableBody>
           </Table>
-        </div>
+        </ResponsiveTableShell>
       </div>
     </SectionCard>
   );

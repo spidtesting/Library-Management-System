@@ -65,7 +65,7 @@ export function SectionCard({
 
   return (
     <Card className={cn("min-w-0 overflow-hidden", styles.card, className)}>
-      <CardHeader className={cn("pb-4", styles.header)}>
+      <CardHeader className={cn("px-4 pb-4 sm:px-6", styles.header)}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className={cn("text-base sm:text-lg", styles.title)}>
@@ -78,7 +78,9 @@ export function SectionCard({
           {action}
         </div>
       </CardHeader>
-      <CardContent className={cn("pt-6", contentClassName)}>{children}</CardContent>
+      <CardContent className={cn("px-4 pt-4 sm:px-6 sm:pt-6", contentClassName)}>
+        {children}
+      </CardContent>
     </Card>
   );
 }

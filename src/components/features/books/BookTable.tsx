@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BookCoverImage } from "@/components/features/books/BookCoverImage";
+import { ResponsiveTableShell } from "@/components/ui/responsive-table-shell";
 import { bookStatusBadgeClass } from "@/lib/status-badges";
 import { cn } from "@/lib/utils";
 
@@ -27,14 +28,14 @@ export function BookTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <ResponsiveTableShell>
       <Table>
         <caption className="sr-only">Books catalogue</caption>
         <TableHeader>
           <TableRow>
             <TableHead>Cover</TableHead>
             <TableHead>Title</TableHead>
-            <TableHead>Author</TableHead>
+            <TableHead className="hidden sm:table-cell">Author</TableHead>
             <TableHead>Available</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
@@ -65,7 +66,7 @@ export function BookTable({
                   {book.title}
                 </Link>
               </TableCell>
-              <TableCell>{book.author?.name ?? "—"}</TableCell>
+              <TableCell className="hidden sm:table-cell">{book.author?.name ?? "—"}</TableCell>
               <TableCell>
                 {book.available_copies} / {book.total_copies}
               </TableCell>
@@ -87,6 +88,6 @@ export function BookTable({
           ))}
         </TableBody>
       </Table>
-    </div>
+    </ResponsiveTableShell>
   );
 }

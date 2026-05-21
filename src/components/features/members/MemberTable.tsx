@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { parseApiResponse } from "@/lib/parse-api-response";
 import { Pencil, Trash2, BookCheck, BookX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { ResponsiveTableShell } from "@/components/ui/responsive-table-shell";
 import { borrowAccessBadgeClass } from "@/lib/status-badges";
 import { cn } from "@/lib/utils";
 
@@ -87,14 +88,14 @@ export function MemberTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <ResponsiveTableShell>
       <Table>
         <caption className="sr-only">Members list</caption>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead>NIC</TableHead>
-            <TableHead>Email</TableHead>
+            <TableHead className="hidden md:table-cell">NIC</TableHead>
+            <TableHead className="hidden lg:table-cell">Email</TableHead>
             <TableHead>Tokens</TableHead>
             <TableHead>Borrow access</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -110,11 +111,12 @@ export function MemberTable({
                 >
                   {m.full_name}
                 </Link>
+                <p className="truncate text-xs text-muted-foreground lg:hidden">{m.email}</p>
               </TableCell>
-              <TableCell className="font-mono text-sm text-muted-foreground">
+              <TableCell className="hidden font-mono text-sm text-muted-foreground md:table-cell">
                 {m.nic_number ?? "—"}
               </TableCell>
-              <TableCell className="text-muted-foreground">{m.email}</TableCell>
+              <TableCell className="hidden text-muted-foreground lg:table-cell">{m.email}</TableCell>
               <TableCell>
                 {m.borrow_tokens_used}/{m.borrow_token_limit}
               </TableCell>
@@ -166,6 +168,6 @@ export function MemberTable({
           ))}
         </TableBody>
       </Table>
-    </div>
+    </ResponsiveTableShell>
   );
 }

@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { overdueRowClass } from "@/lib/status-badges";
+import { ResponsiveTableShell } from "@/components/ui/responsive-table-shell";
 
 export function ReturnsClient({
   borrows,
@@ -89,7 +90,7 @@ export function ReturnsClient({
         <ReturnsTable borrows={filtered} onReturn={setSelected} />
       </div>
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm return</DialogTitle>
             <DialogDescription>
@@ -131,7 +132,7 @@ function ReturnsTable({
   onReturn: (b: ActiveBorrow) => void;
 }) {
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <ResponsiveTableShell>
       <Table>
         <caption className="sr-only">Active borrows</caption>
         <TableHeader>
@@ -173,6 +174,6 @@ function ReturnsTable({
           )}
         </TableBody>
       </Table>
-    </div>
+    </ResponsiveTableShell>
   );
 }

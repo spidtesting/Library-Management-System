@@ -124,17 +124,18 @@ export function IssueStepper() {
               value={bookSearch}
               onChange={(e) => setBookSearch(e.target.value)}
               placeholder="Title…"
+              className="h-11"
             />
             <ul className="max-h-56 overflow-auto rounded-md border sm:max-h-48">
               {books.map((b) => (
                 <li key={b.id}>
                   <button
                     type="button"
-                    className="flex min-h-11 w-full flex-col px-3 py-2.5 text-left text-sm hover:bg-muted sm:flex-row sm:items-center sm:justify-between sm:gap-2"
+                    className="flex min-h-11 w-full flex-col px-3 py-2.5 text-left text-sm hover:bg-muted sm:flex-row sm:items-center sm:justify-between"
                     onClick={() => setBook(b)}
                   >
-                    <span className="truncate font-medium">{b.title}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground sm:text-sm">
+                    <span className="font-medium">{b.title}</span>
+                    <span className="text-xs text-muted-foreground sm:text-sm">
                       {b.available_copies} available
                     </span>
                   </button>
@@ -143,11 +144,11 @@ export function IssueStepper() {
             </ul>
             {book && <p className="text-sm">Selected: {book.title}</p>}
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep(1)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row">
+            <Button variant="outline" className="h-11 w-full sm:w-auto" onClick={() => setStep(1)}>
               Back
             </Button>
-            <Button className="flex-1" disabled={!book} onClick={() => setStep(3)}>
+            <Button className="h-11 w-full flex-1" disabled={!book} onClick={() => setStep(3)}>
               Next: Confirm
             </Button>
           </div>
@@ -187,11 +188,11 @@ function IssueActions({
   onSubmit: () => void;
 }) {
   return (
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={onBack}>
+    <div className="flex flex-col-reverse gap-2 sm:flex-row">
+      <Button variant="outline" className="h-11 w-full sm:w-auto" onClick={onBack}>
         Back
       </Button>
-      <Button className="flex-1" disabled={loading} onClick={onSubmit}>
+      <Button className="h-11 w-full flex-1" disabled={loading} onClick={onSubmit}>
         {loading ? "Issuing…" : "Confirm issue"}
       </Button>
     </div>

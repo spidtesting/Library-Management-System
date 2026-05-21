@@ -68,7 +68,7 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-3xl space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto w-full max-w-3xl space-y-6">
       <SectionCard title="Cover photo" accent="violet">
         <BookCoverPicker value={coverBase64} onChange={setCoverBase64} disabled={isSubmitting} />
       </SectionCard>
