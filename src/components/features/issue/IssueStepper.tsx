@@ -99,7 +99,7 @@ export function IssueStepper() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
+    <div className="mx-auto w-full max-w-lg space-y-6 px-1 sm:px-0">
       <div className="rounded-full border border-brand/25 bg-brand/[0.06] px-3 py-1.5 text-center text-sm font-medium text-brand">
         Step {step} of 3
       </div>
@@ -125,15 +125,18 @@ export function IssueStepper() {
               onChange={(e) => setBookSearch(e.target.value)}
               placeholder="Title…"
             />
-            <ul className="max-h-48 overflow-auto border rounded-md">
+            <ul className="max-h-56 overflow-auto rounded-md border sm:max-h-48">
               {books.map((b) => (
                 <li key={b.id}>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                    className="flex min-h-11 w-full flex-col px-3 py-2.5 text-left text-sm hover:bg-muted sm:flex-row sm:items-center sm:justify-between sm:gap-2"
                     onClick={() => setBook(b)}
                   >
-                    {b.title} ({b.available_copies} available)
+                    <span className="truncate font-medium">{b.title}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground sm:text-sm">
+                      {b.available_copies} available
+                    </span>
                   </button>
                 </li>
               ))}

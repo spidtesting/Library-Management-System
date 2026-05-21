@@ -46,9 +46,9 @@ export function BrowseClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
         <BookSearch value={search} onChange={setSearch} />
-        <div className="space-y-2">
+        <div className="w-full space-y-2 sm:w-auto">
           <Label htmlFor="cat">Category</Label>
           <Select
             value={searchParams.get("category") ?? "all"}
@@ -60,7 +60,7 @@ export function BrowseClient({
               router.push(`/member/browse?${params.toString()}`);
             }}
           >
-            <SelectTrigger id="cat" className="w-48">
+            <SelectTrigger id="cat" className="h-11 w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

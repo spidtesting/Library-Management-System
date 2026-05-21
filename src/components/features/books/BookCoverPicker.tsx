@@ -15,9 +15,10 @@ import {
   fileToDataUrl,
   getCameraPermissionState,
   validateCoverFile,
+  watchCameraPermission,
   type CoverPermissionState,
 } from "@/lib/cover-image";
-import { Camera, ImageIcon, Upload, X } from "lucide-react";
+import { Camera, ImageIcon, RefreshCw, Shield, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -31,11 +32,13 @@ export function BookCoverPicker({
   disabled?: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [permission, setPermission] = useState<CoverPermissionState>("prompt");
 
   useEffect(() => {
-    getCameraPermissionState().then(setPermission);
+    void getCameraPermissionState().then(setPermission);
+    return watchCameraPermission(setPermission);
   }, []);
 
   async function handleFile(file: File | undefined) {
@@ -54,15 +57,35 @@ export function BookCoverPicker({
     }
   }
 
+  async function refreshPermission() {
+    const next = await getCameraPermissionState();
+    setPermission(next);
+    toast.message(
+      next === "granted"
+        ? "Camera access is allowed"
+        : next === "denied"
+          ? "Camera is still blocked"
+          : "Camera will ask when you take a photo"
+    );
+  }
+
+  function openCamera() {
+    if (permission === "unsupported") {
+      cameraInputRef.current?.click();
+      return;
+    }
+    setCameraOpen(true);
+  }
+
   return (
     <div className="space-y-4">
-      <CoverPermissionsCard permission={permission} />
+      <CoverPermissionsCard permission={permission} onRefresh={refreshPermission} />
 
       <div className="space-y-2">
         <Label>Book cover (max 2MB)</Label>
         <div
           className={cn(
-            "relative flex min-h-[220px] items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/30",
+            "relative flex min-h-[180px] items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/30 sm:min-h-[220px]",
             value && "border-solid"
           )}
         >
@@ -72,13 +95,13 @@ export function BookCoverPicker({
               <img
                 src={value}
                 alt="Cover preview"
-                className="max-h-[280px] w-full object-contain"
+                className="max-h-[240px] w-full object-contain sm:max-h-[280px]"
               />
               <Button
                 type="button"
                 size="icon"
                 variant="secondary"
-                className="absolute right-2 top-2 h-8 w-8"
+                className="absolute right-2 top-2 h-9 w-9 touch-target"
                 disabled={disabled}
                 onClick={() => onChange(null)}
                 aria-label="Remove cover"
@@ -87,7 +110,7 @@ export function BookCoverPicker({
               </Button>
             </>
           ) : (
-            <div className="flex flex-col items-center gap-2 p-6 text-center text-sm text-muted-foreground">
+            <div className="flex flex-col items-center gap-2 p-4 text-center text-sm text-muted-foreground sm:p-6">
               <ImageIcon className="h-10 w-10 opacity-50" />
               <p>Upload a photo or use your camera</p>
               <p className="text-xs">JPEG, PNG, or WebP · up to 2MB</p>
@@ -96,7 +119,7 @@ export function BookCoverPicker({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:flex sm:flex-wrap">
         <input
           ref={fileInputRef}
           type="file"
@@ -108,25 +131,37 @@ export function BookCoverPicker({
             e.target.value = "";
           }}
         />
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="sr-only"
+          disabled={disabled}
+          onChange={(e) => {
+            void handleFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
         <Button
           type="button"
           variant="outline"
-          className="gap-2"
+          className="h-11 w-full gap-2 sm:w-auto"
           disabled={disabled}
           onClick={() => fileInputRef.current?.click()}
         >
-          <Upload className="h-4 w-4" />
+          <Upload className="h-4 w-4 shrink-0" />
           Upload image
         </Button>
         <Button
           type="button"
           variant="outline"
-          className="gap-2"
+          className="h-11 w-full gap-2 sm:w-auto"
           disabled={disabled || permission === "denied"}
-          onClick={() => setCameraOpen(true)}
+          onClick={openCamera}
         >
-          <Camera className="h-4 w-4" />
-          Take photo
+          <Camera className="h-4 w-4 shrink-0" />
+          {permission === "unsupported" ? "Use camera app" : "Take photo"}
         </Button>
       </div>
 
@@ -136,7 +171,7 @@ export function BookCoverPicker({
         onCapture={(dataUrl) => {
           onChange(dataUrl);
           setCameraOpen(false);
-          getCameraPermissionState().then(setPermission);
+          void getCameraPermissionState().then(setPermission);
         }}
         onPermissionChange={setPermission}
       />
@@ -144,41 +179,81 @@ export function BookCoverPicker({
   );
 }
 
-function CoverPermissionsCard({ permission }: { permission: CoverPermissionState }) {
+function CoverPermissionsCard({
+  permission,
+  onRefresh,
+}: {
+  permission: CoverPermissionState;
+  onRefresh: () => void;
+}) {
   const rows: { label: string; detail: string; status: CoverPermissionState }[] = [
     {
-      label: "File upload",
-      detail: "Choose an image from your device (no extra permission).",
+      label: "Photo library / files",
+      detail: "Pick an image from your device. No extra permission needed.",
       status: "granted",
     },
     {
       label: "Camera",
       detail:
         permission === "denied"
-          ? "Blocked — allow camera in browser site settings, then retry."
+          ? "Blocked — enable camera for this site in browser settings, then tap Check again."
           : permission === "unsupported"
-            ? "Not available in this browser; use Upload image instead."
+            ? "Live preview unavailable here. Use Take photo to open your device camera app."
             : permission === "granted"
-              ? "Allowed — you can take a photo."
-              : "Will ask when you tap Take photo.",
+              ? "Allowed — live camera preview is ready."
+              : "Your browser will ask when you tap Take photo.",
       status: permission === "unsupported" ? "unsupported" : permission,
     },
   ];
 
   return (
-    <div className="rounded-lg border bg-muted/20 p-3 text-sm">
-      <p className="mb-2 font-medium">Permissions</p>
-      <ul className="space-y-2">
+    <div className="rounded-lg border border-brand/20 bg-brand/[0.04] p-3 text-sm sm:p-4">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="flex items-center gap-2 font-medium text-brand">
+          <Shield className="h-4 w-4 shrink-0" aria-hidden />
+          Camera & photo permissions
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-full gap-2 sm:w-auto"
+          onClick={onRefresh}
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Check again
+        </Button>
+      </div>
+      <ul className="space-y-3">
         {rows.map((row) => (
-          <li key={row.label} className="flex gap-2">
+          <li key={row.label} className="flex gap-3">
             <PermissionBadge state={row.status} />
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="font-medium">{row.label}</p>
-              <p className="text-xs text-muted-foreground">{row.detail}</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">{row.detail}</p>
             </div>
           </li>
         ))}
       </ul>
+      {permission === "denied" && (
+        <div className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/[0.08] p-3 text-xs text-muted-foreground">
+          <p className="font-medium text-amber-800 dark:text-amber-300">How to allow camera</p>
+          <ul className="mt-1.5 list-inside list-disc space-y-1">
+            <li>
+              <strong>iPhone/iPad (Safari):</strong> Settings → Safari → Camera → Allow, or tap the
+              aA icon in the address bar → Website Settings.
+            </li>
+            <li>
+              <strong>Android (Chrome):</strong> Tap the lock icon in the address bar → Permissions
+              → Camera → Allow.
+            </li>
+            <li>
+              <strong>Desktop:</strong> Click the camera icon in the address bar and allow access
+              for this site.
+            </li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -194,7 +269,7 @@ function PermissionBadge({ state }: { state: CoverPermissionState }) {
     granted: "Allowed",
     denied: "Blocked",
     prompt: "Ask",
-    unsupported: "N/A",
+    unsupported: "Fallback",
   };
   return (
     <span
@@ -260,13 +335,13 @@ function CameraCaptureDialog({
       } catch (err) {
         const name = err instanceof DOMException ? err.name : "";
         if (name === "NotAllowedError" || name === "PermissionDeniedError") {
-          setError("Camera permission denied. Allow camera access for this site.");
+          setError("Camera permission denied. Allow camera access for this site, then try again.");
           onPermissionChange("denied");
         } else if (name === "NotFoundError") {
           setError("No camera found on this device.");
           onPermissionChange("unsupported");
         } else {
-          setError("Could not open camera. Try uploading an image instead.");
+          setError("Could not open camera. Try Upload image instead.");
         }
         setReady(false);
       }
@@ -309,38 +384,50 @@ function CameraCaptureDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[95dvh] w-[calc(100%-0.5rem)] max-w-lg flex-col gap-3 p-3 sm:p-4 md:max-w-xl">
+        <DialogHeader className="text-left">
           <DialogTitle>Take cover photo</DialogTitle>
           <DialogDescription>
-            Position the book cover in frame, then capture. Saved as JPEG (max 2MB).
+            Position the book cover in frame. On mobile, hold the device steady and use good
+            lighting.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-black">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="relative aspect-[3/4] max-h-[55dvh] w-full overflow-hidden rounded-lg bg-black sm:aspect-[4/3]">
             <video
               ref={videoRef}
               playsInline
               muted
+              autoPlay
               className={cn("h-full w-full object-cover", !ready && "opacity-0")}
             />
             {!ready && !error && (
-              <p className="absolute inset-0 flex items-center justify-center text-sm text-white/80">
+              <p className="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-white/80">
                 Starting camera…
               </p>
             )}
             {error && (
-              <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-white">
-                {error}
-              </p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white">
+                <p>{error}</p>
+              </div>
             )}
           </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 w-full sm:w-auto"
+              onClick={() => onOpenChange(false)}
+            >
               Cancel
             </Button>
-            <Button type="button" disabled={!ready} onClick={capture}>
-              Capture
+            <Button
+              type="button"
+              className="h-11 w-full sm:w-auto"
+              disabled={!ready}
+              onClick={capture}
+            >
+              Capture photo
             </Button>
           </div>
         </div>

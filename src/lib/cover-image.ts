@@ -28,6 +28,43 @@ export async function getCameraPermissionState(): Promise<CoverPermissionState> 
   }
 }
 
+/** Re-check when the user changes camera permission in browser settings. */
+export function watchCameraPermission(
+  callback: (state: CoverPermissionState) => void
+): () => void {
+  if (typeof navigator === "undefined" || !navigator.permissions?.query) {
+    void getCameraPermissionState().then(callback);
+    return () => undefined;
+  }
+
+  let disposed = false;
+  let permissionStatus: PermissionStatus | null = null;
+
+  const onChange = () => {
+    if (!permissionStatus || disposed) return;
+    if (permissionStatus.state === "granted") callback("granted");
+    else if (permissionStatus.state === "denied") callback("denied");
+    else callback("prompt");
+  };
+
+  void navigator.permissions
+    .query({ name: "camera" as PermissionName })
+    .then((status) => {
+      if (disposed) return;
+      permissionStatus = status;
+      onChange();
+      status.addEventListener("change", onChange);
+    })
+    .catch(() => {
+      void getCameraPermissionState().then(callback);
+    });
+
+  return () => {
+    disposed = true;
+    permissionStatus?.removeEventListener("change", onChange);
+  };
+}
+
 export function validateCoverFile(file: File): string | null {
   if (!ALLOWED_COVER_TYPES.includes(file.type)) {
     return "Use JPEG, PNG, or WebP";

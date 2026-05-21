@@ -51,15 +51,16 @@ export function MemberSelector({
         placeholder="Name or email…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        className="h-11"
       />
       {selected && (
-        <p className="text-sm">
+        <p className="rounded-lg border border-emerald-500/25 bg-emerald-500/[0.06] px-3 py-2 text-sm">
           Selected: <strong>{selected.full_name}</strong> ({selected.borrow_tokens_used}/
           {selected.borrow_token_limit} tokens)
         </p>
       )}
       {loading && <p className="text-sm text-muted-foreground">Searching…</p>}
-      <ul className="max-h-48 space-y-1 overflow-auto rounded-md border p-2">
+      <ul className="max-h-56 space-y-1 overflow-auto rounded-md border p-2 sm:max-h-48">
         {results.map((member) => {
           const atLimit = member.borrow_tokens_used >= member.borrow_token_limit;
           const disabled = !member.is_active || atLimit;
@@ -70,14 +71,17 @@ export function MemberSelector({
                 disabled={disabled}
                 onClick={() => onSelect(member)}
                 className={cn(
-                  "w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted",
+                  "flex min-h-11 w-full flex-col rounded px-2 py-2 text-left text-sm hover:bg-muted sm:flex-row sm:items-center sm:gap-2",
                   disabled && "cursor-not-allowed opacity-50",
-                  selected?.id === member.id && "bg-muted"
+                  selected?.id === member.id && "bg-muted ring-1 ring-brand/30"
                 )}
               >
-                {member.full_name} — {member.email}
-                {atLimit && " (at limit)"}
-                {!member.is_active && " (inactive)"}
+                <span className="truncate font-medium">{member.full_name}</span>
+                <span className="truncate text-xs text-muted-foreground sm:text-sm">
+                  {member.email}
+                  {atLimit && " · at limit"}
+                  {!member.is_active && " · inactive"}
+                </span>
               </button>
             </li>
           );

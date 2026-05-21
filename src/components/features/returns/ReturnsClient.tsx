@@ -89,7 +89,7 @@ export function ReturnsClient({
         <ReturnsTable borrows={filtered} onReturn={setSelected} />
       </div>
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm return</DialogTitle>
             <DialogDescription>

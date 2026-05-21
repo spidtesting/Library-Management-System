@@ -57,7 +57,7 @@ export function BooksClient({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
         <BookSearch value={search} onChange={setSearch} />
         <BookFilters
           categories={categories}

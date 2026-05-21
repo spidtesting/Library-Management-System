@@ -16,7 +16,7 @@ export function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="relative w-full max-w-md border-border/60 shadow-lg shadow-black/5">
+    <Card className="relative w-full max-w-md border-border/60 shadow-lg shadow-black/5 mx-auto">
       <CardHeader className="space-y-1 pb-4">
         <CardTitle className="text-xl">{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
