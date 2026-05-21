@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
 import { toast } from "sonner";
 import { parseApiResponse } from "@/lib/parse-api-response";
 
@@ -69,20 +69,12 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-3xl space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Cover photo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <BookCoverPicker value={coverBase64} onChange={setCoverBase64} disabled={isSubmitting} />
-        </CardContent>
-      </Card>
+      <SectionCard title="Cover photo" accent="violet">
+        <BookCoverPicker value={coverBase64} onChange={setCoverBase64} disabled={isSubmitting} />
+      </SectionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Book details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <SectionCard title="Book details" accent="blue">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Title *" id="title" error={errors.title?.message} className="sm:col-span-2">
             <Input id="title" {...register("title")} />
           </Field>
@@ -110,14 +102,11 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
           <Field label="Description" id="description" className="sm:col-span-2">
             <Textarea id="description" rows={4} {...register("description")} />
           </Field>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Copies & location</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
+      <SectionCard title="Copies & location" accent="emerald">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Total copies *" id="total_copies" error={errors.total_copies?.message}>
             <Input
               id="total_copies"
@@ -146,8 +135,8 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
           <Field label="Rack" id="rack_number">
             <Input id="rack_number" placeholder="e.g. R2" {...register("rack_number")} />
           </Field>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={() => router.push(listPath)}>

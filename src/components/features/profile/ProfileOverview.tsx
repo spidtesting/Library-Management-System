@@ -1,9 +1,10 @@
 import type { Profile } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { UserAvatar } from "./UserAvatar";
 import { formatDate } from "@/utils/formatDate";
+import { borrowAccessBadgeClass } from "@/lib/status-badges";
 import { Mail, Phone, MapPin, Calendar, CreditCard, type LucideIcon } from "lucide-react";
 
 export function ProfileOverview({ profile }: { profile: Profile }) {
@@ -14,25 +15,36 @@ export function ProfileOverview({ profile }: { profile: Profile }) {
       : 0;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-4">
-        <UserAvatar name={profile.full_name} avatarUrl={profile.avatar_url} size="lg" />
-        <div className="min-w-0 flex-1 space-y-1">
-          <CardTitle className="text-xl">{profile.full_name}</CardTitle>
-          <p className="text-sm text-muted-foreground">{profile.email}</p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Badge variant="secondary" className="capitalize">
-              {profile.role}
+    <SectionCard
+      accent="brand"
+      title={
+        <span className="flex items-start gap-4">
+          <UserAvatar name={profile.full_name} avatarUrl={profile.avatar_url} size="lg" />
+          <span className="min-w-0 pt-1">
+            <span className="block text-xl">{profile.full_name}</span>
+            <span className="mt-1 block text-sm font-normal text-muted-foreground">
+              {profile.email}
+            </span>
+          </span>
+        </span>
+      }
+      action={
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="capitalize">
+            {profile.role}
+          </Badge>
+          {isMember && (
+            <Badge
+              variant={profile.is_active ? "default" : "destructive"}
+              className={borrowAccessBadgeClass(profile.is_active)}
+            >
+              {profile.is_active ? "Active" : "Inactive"}
             </Badge>
-            {isMember && (
-              <Badge variant={profile.is_active ? "default" : "destructive"}>
-                {profile.is_active ? "Active" : "Inactive"}
-              </Badge>
-            )}
-          </div>
+          )}
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4 text-sm">
+      }
+    >
+      <div className="space-y-4 text-sm">
         <ProfileDetail icon={Mail} label="Email" value={profile.email} />
         {isMember && profile.nic_number && (
           <ProfileDetail
@@ -57,7 +69,7 @@ export function ProfileOverview({ profile }: { profile: Profile }) {
           value={formatDate(profile.created_at)}
         />
         {isMember && (
-          <div className="rounded-lg border bg-muted/30 p-3">
+          <div className="rounded-lg border border-brand/20 bg-brand/[0.05] p-3">
             <p className="text-xs font-medium text-muted-foreground">Borrow tokens</p>
             <Progress value={tokenPercent} className="mt-2" />
             <p className="mt-1 text-xs text-muted-foreground">
@@ -65,8 +77,8 @@ export function ProfileOverview({ profile }: { profile: Profile }) {
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -81,7 +93,7 @@ function ProfileDetail({
 }) {
   return (
     <div className="flex gap-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
       <div className="min-w-0">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>
         <p className="break-words">{value}</p>

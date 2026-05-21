@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
 import { toast } from "sonner";
 import { useState } from "react";
 import { parseApiResponse } from "@/lib/parse-api-response";
@@ -92,11 +92,8 @@ export function BookEditForm({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <Card>
-        <CardHeader>
-          <CardTitle>Cover photo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <SectionCard title="Cover photo" accent="violet">
+        <div className="space-y-4">
           {previewUrl ? (
             <BookCoverImage
               src={previewUrl}
@@ -120,14 +117,10 @@ export function BookEditForm({
               This book has a storage URL cover. Upload or take a new photo to replace it with a saved base64 image.
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Edit details</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <SectionCard title="Edit details" accent="blue">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Field label="Title" id="title" error={errors.title?.message}>
               <Input id="title" {...register("title")} />
@@ -166,8 +159,7 @@ export function BookEditForm({
               )}
             </div>
           </form>
-        </CardContent>
-      </Card>
+      </SectionCard>
     </div>
   );
 }

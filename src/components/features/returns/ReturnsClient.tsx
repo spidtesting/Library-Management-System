@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ActiveBorrow } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SectionCard } from "@/components/ui/section-card";
 import { calculateFine } from "@/utils/calculateFine";
 import { formatDate } from "@/utils/formatDate";
 import { toast } from "sonner";
@@ -23,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { overdueRowClass } from "@/lib/status-badges";
 
 export function ReturnsClient({
   borrows,
@@ -71,14 +74,20 @@ export function ReturnsClient({
   }
 
   return (
-    <div className="space-y-4">
-      <Input
-        placeholder="Search by book or member…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        aria-label="Search active borrows"
-      />
-      <ReturnsTable borrows={filtered} onReturn={setSelected} />
+    <SectionCard
+      title="Active loans"
+      description="Search and process book returns at the desk"
+      accent="emerald"
+    >
+      <div className="space-y-4">
+        <Input
+          placeholder="Search by book or member…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          aria-label="Search active borrows"
+        />
+        <ReturnsTable borrows={filtered} onReturn={setSelected} />
+      </div>
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent>
           <DialogHeader>
@@ -96,7 +105,7 @@ export function ReturnsClient({
                   {preview.amount.toFixed(2)}
                 </p>
               ) : (
-                <p className="text-muted-foreground">No fine due</p>
+                <p className="text-emerald-700 dark:text-emerald-300">No fine due</p>
               )}
             </div>
           )}
@@ -110,7 +119,7 @@ export function ReturnsClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </SectionCard>
   );
 }
 
@@ -126,26 +135,42 @@ function ReturnsTable({
       <Table>
         <caption className="sr-only">Active borrows</caption>
         <TableHeader>
-          <TableRow>
+          <TableRow className="hover:bg-transparent">
             <TableHead>Book</TableHead>
             <TableHead>Member</TableHead>
             <TableHead>Due</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
-          {borrows.map((b) => (
-            <TableRow key={b.id}>
-              <TableCell>{b.book_title}</TableCell>
-              <TableCell>{b.member_name}</TableCell>
-              <TableCell>{formatDate(b.due_date)}</TableCell>
-              <TableCell>
-                <Button size="sm" onClick={() => onReturn(b)}>
-                  Return
-                </Button>
+          {borrows.map((b) => {
+            const isOverdue = b.overdue_days > 0;
+            return (
+              <TableRow key={b.id} className={overdueRowClass(isOverdue)}>
+                <TableCell className="font-medium">{b.book_title}</TableCell>
+                <TableCell>{b.member_name}</TableCell>
+                <TableCell>{formatDate(b.due_date)}</TableCell>
+                <TableCell>
+                  <Badge variant={isOverdue ? "destructive" : "secondary"}>
+                    {isOverdue ? `Overdue ${b.overdue_days}d` : "On time"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Button size="sm" onClick={() => onReturn(b)}>
+                    Return
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+          {borrows.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                No active loans match your search.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

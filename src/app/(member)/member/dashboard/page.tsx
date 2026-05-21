@@ -6,13 +6,10 @@ import { getMemberActiveBorrows, getMemberPendingFinesTotal } from "@/services/m
 import { getMemberFines } from "@/services/fineService";
 import { getSettings } from "@/services/settingsService";
 import { StatCard } from "@/components/features/dashboard/StatCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, getDueDateStatus } from "@/utils/formatDate";
 import { calculateFine } from "@/utils/calculateFine";
 import { cn } from "@/lib/utils";
-import { RecentlyViewed } from "@/components/features/books/RecentlyViewed";
 import {
   BookOpen,
   Coins,
@@ -21,6 +18,9 @@ import {
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
+import { RecentlyViewed } from "@/components/features/books/RecentlyViewed";
+import { SectionCard } from "@/components/ui/section-card";
+import { buttonVariants } from "@/components/ui/button";
 import type { IssuedBook } from "@/types";
 
 export const metadata: Metadata = { title: "Dashboard | Member" };
@@ -62,12 +62,14 @@ export default async function MemberDashboardPage() {
           value={tokensAvailable}
           description={`${profile.borrow_tokens_used} of ${profile.borrow_token_limit} in use`}
           icon={Library}
+          accent="violet"
         />
         <StatCard
           title="Books out"
           value={borrows.length}
           description={borrows.length === 1 ? "Active borrow" : "Active borrows"}
           icon={BookOpen}
+          accent="blue"
         />
         <StatCard
           title="Pending fines"
@@ -78,6 +80,7 @@ export default async function MemberDashboardPage() {
               : "No outstanding fines"
           }
           icon={Coins}
+          accent="amber"
         />
         <StatCard
           title="Borrow access"
@@ -88,21 +91,25 @@ export default async function MemberDashboardPage() {
               : "Contact the library to restore access"
           }
           icon={profile.is_active ? ShieldCheck : ShieldOff}
+          accent={profile.is_active ? "emerald" : "rose"}
         />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between gap-2">
-            <CardTitle>Active borrows</CardTitle>
+        <SectionCard
+          title="Active borrows"
+          accent="emerald"
+          className="lg:col-span-2"
+          action={
             <Link
               href="/member/browse"
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Browse books
             </Link>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2">
+          }
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
             {borrows.map((b) => (
               <BorrowCard
                 key={b.id}
@@ -119,30 +126,28 @@ export default async function MemberDashboardPage() {
                 to find your next read.
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
         {pendingFines.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Pending fines</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="text-sm space-y-2">
-                {pendingFines.map((f) => (
-                  <li key={f.id} className="flex justify-between gap-2">
-                    <span>{f.overdue_days} days overdue</span>
-                    <span className="font-medium tabular-nums">
-                      ${Number(f.total_amount).toFixed(2)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Pay fines at the library desk.
-              </p>
-            </CardContent>
-          </Card>
+          <SectionCard title="Pending fines" accent="amber">
+            <ul className="text-sm space-y-2">
+              {pendingFines.map((f) => (
+                <li
+                  key={f.id}
+                  className="flex justify-between gap-2 rounded-lg border border-amber-500/20 bg-amber-500/[0.04] px-3 py-2"
+                >
+                  <span>{f.overdue_days} days overdue</span>
+                  <span className="font-medium tabular-nums text-amber-700 dark:text-amber-300">
+                    ${Number(f.total_amount).toFixed(2)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Pay fines at the library desk.
+            </p>
+          </SectionCard>
         )}
       </div>
 
@@ -175,17 +180,25 @@ function BorrowCard({
         ? "secondary"
         : "outline";
 
+  const statusBadgeClass =
+    status === "overdue"
+      ? undefined
+      : status === "warning"
+        ? "border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+        : "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+
   return (
     <div
       className={cn(
         "rounded-lg border p-3 text-sm space-y-2",
-        status === "overdue" && "border-destructive/50 bg-destructive/5",
-        status === "warning" && "border-brand/50 bg-brand/5"
+        status === "overdue" && "border-rose-500/40 bg-rose-500/[0.06]",
+        status === "warning" && "border-amber-500/40 bg-amber-500/[0.06]",
+        status === "ok" && "border-emerald-500/30 bg-emerald-500/[0.04]"
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="font-medium leading-snug">{borrow.book?.title ?? "Book"}</p>
-        <Badge variant={statusVariant} className="shrink-0 text-xs">
+        <Badge variant={statusVariant} className={cn("shrink-0 text-xs", statusBadgeClass)}>
           {statusLabel}
         </Badge>
       </div>

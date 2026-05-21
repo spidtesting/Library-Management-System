@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BookCoverImage } from "@/components/features/books/BookCoverImage";
+import { bookStatusBadgeClass } from "@/lib/status-badges";
+import { cn } from "@/lib/utils";
 
 export function BookTable({
   books,
@@ -39,7 +41,12 @@ export function BookTable({
         </TableHeader>
         <TableBody>
           {books.map((book) => (
-            <TableRow key={book.id}>
+            <TableRow
+              key={book.id}
+              className={cn(
+                book.available_copies === 0 && "bg-orange-500/[0.03] hover:bg-orange-500/[0.06]"
+              )}
+            >
               <TableCell>
                 {book.cover_url ? (
                   <BookCoverImage
@@ -63,8 +70,17 @@ export function BookTable({
                 {book.available_copies} / {book.total_copies}
               </TableCell>
               <TableCell>
-                <Badge variant={book.status === "available" ? "default" : "secondary"}>
-                  {book.status}
+                <Badge
+                  variant={
+                    book.available_copies === 0
+                      ? "destructive"
+                      : book.status === "available"
+                        ? "default"
+                        : "secondary"
+                  }
+                  className={bookStatusBadgeClass(book)}
+                >
+                  {book.available_copies === 0 ? "Out of stock" : book.status}
                 </Badge>
               </TableCell>
             </TableRow>

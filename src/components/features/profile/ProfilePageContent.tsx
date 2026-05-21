@@ -3,7 +3,7 @@ import { ProfileOverview } from "./ProfileOverview";
 import { ProfileForm } from "./ProfileForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import type { Profile } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
 
 export function ProfilePageContent({ profile }: { profile: Profile }) {
   const isMember = profile.role === "member";
@@ -17,23 +17,13 @@ export function ProfilePageContent({ profile }: { profile: Profile }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <ProfileOverview profile={profile} />
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Edit details</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProfileForm profile={profile} />
-            </CardContent>
-          </Card>
+          <SectionCard title="Edit details" accent="blue">
+            <ProfileForm profile={profile} />
+          </SectionCard>
           {isMember && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Change password</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChangePasswordForm />
-              </CardContent>
-            </Card>
+            <SectionCard title="Change password" accent="amber">
+              <ChangePasswordForm />
+            </SectionCard>
           )}
         </div>
       </div>

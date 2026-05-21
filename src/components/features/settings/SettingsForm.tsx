@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { settingsSchema, type SettingsInput } from "@/lib/validations";
 import type { LibrarySettings } from "@/types";
+import { SectionCard } from "@/components/ui/section-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,7 +46,12 @@ export function SettingsForm({ settings }: { settings: LibrarySettings }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-md space-y-4">
+    <SectionCard
+      title="Library policies"
+      description="Borrow limits, fines, and reservation rules"
+      accent="brand"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-md space-y-4">
       <Field label="Library name" id="library_name" error={errors.library_name?.message}>
         <Input id="library_name" {...register("library_name")} />
       </Field>
@@ -72,6 +78,7 @@ export function SettingsForm({ settings }: { settings: LibrarySettings }) {
         {isSubmitting ? "Saving…" : "Save settings"}
       </Button>
     </form>
+    </SectionCard>
   );
 }
 

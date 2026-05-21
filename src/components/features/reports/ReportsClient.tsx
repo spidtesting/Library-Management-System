@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
+import type { StatAccent } from "@/components/features/dashboard/StatCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -345,6 +347,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
           <ReportCard
             title="Overdue books"
             description="Active loans past due date"
+            accent="rose"
             search={overdueSearch}
             onSearchChange={setOverdueSearch}
             count={filteredOverdue.length}
@@ -372,6 +375,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
           <ReportCard
             title="Active loans"
             description="All books currently issued"
+            accent="emerald"
             search={activeSearch}
             onSearchChange={setActiveSearch}
             count={filteredActive.length}
@@ -398,6 +402,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
           <ReportCard
             title="Book inventory"
             description="Full catalogue with copy counts"
+            accent="blue"
             search={inventorySearch}
             onSearchChange={setInventorySearch}
             count={filteredInventory.length}
@@ -426,6 +431,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
           <ReportCard
             title="Borrowing history"
             description="Last 500 issue/return records"
+            accent="violet"
             search={historySearch}
             onSearchChange={setHistorySearch}
             count={filteredHistory.length}
@@ -452,6 +458,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
           <ReportCard
             title="Fines"
             description="Fine records (latest 500)"
+            accent="amber"
             search={finesSearch}
             onSearchChange={setFinesSearch}
             count={filteredFines.length}
@@ -479,6 +486,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
           <ReportCard
             title="Members"
             description="Registered library members"
+            accent="orange"
             search={membersSearch}
             onSearchChange={setMembersSearch}
             count={filteredMembers.length}
@@ -508,6 +516,7 @@ export function ReportsClient({ data }: { data: ReportsData }) {
 function ReportCard({
   title,
   description,
+  accent = "brand",
   search,
   onSearchChange,
   count,
@@ -516,6 +525,7 @@ function ReportCard({
 }: {
   title: string;
   description: string;
+  accent?: StatAccent;
   search: string;
   onSearchChange: (v: string) => void;
   count: number;
@@ -523,12 +533,8 @@ function ReportCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <SectionCard title={title} description={description} accent={accent}>
+      <div className="space-y-4">
         <ReportToolbar
           search={search}
           onSearchChange={onSearchChange}
@@ -537,8 +543,8 @@ function ReportCard({
           onExport={onExport}
         />
         <div className="overflow-x-auto rounded-md border">{children}</div>
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
 

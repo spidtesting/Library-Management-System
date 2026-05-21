@@ -5,6 +5,7 @@ import { useTransition, useEffect, useState } from "react";
 import { BookSearch } from "./BookSearch";
 import { BookFilters } from "./BookFilters";
 import type { Book, Category } from "@/types";
+import { SectionCard } from "@/components/ui/section-card";
 import { BookTable } from "./BookTable";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -68,7 +69,13 @@ export function BooksClient({
           }
         />
       </div>
-      <BookTable books={books} basePath={basePath} />
+      <SectionCard
+        title="Catalogue"
+        description={`${books.length} book${books.length === 1 ? "" : "s"} shown`}
+        accent="blue"
+      >
+        <BookTable books={books} basePath={basePath} />
+      </SectionCard>
     </div>
   );
 }

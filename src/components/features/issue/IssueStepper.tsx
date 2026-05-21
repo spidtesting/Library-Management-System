@@ -6,7 +6,7 @@ import { MemberSelector } from "@/components/features/members/MemberSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
 import { addDays, toDateInputValue } from "@/utils/formatDate";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
@@ -75,14 +75,17 @@ export function IssueStepper() {
 
   if (step === 4 && receipt) {
     return (
-      <Card className="max-w-md mx-auto border-brand/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-brand">
+      <SectionCard
+        title={
+          <span className="inline-flex items-center gap-2 text-brand">
             <CheckCircle2 className="h-5 w-5" />
             Book issued
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
+          </span>
+        }
+        accent="emerald"
+        className="max-w-md mx-auto"
+      >
+        <div className="space-y-2 text-sm">
           <p>
             <strong>{book?.title}</strong> issued to <strong>{member?.full_name}</strong>
           </p>
@@ -90,14 +93,16 @@ export function IssueStepper() {
           <Button onClick={reset} className="w-full mt-4">
             Issue another book
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
     );
   }
 
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      <p className="text-sm text-muted-foreground">Step {step} of 3</p>
+      <div className="rounded-full border border-brand/25 bg-brand/[0.06] px-3 py-1.5 text-center text-sm font-medium text-brand">
+        Step {step} of 3
+      </div>
       {step === 1 && (
         <>
           <MemberSelector selected={member} onSelect={setMember} />
@@ -147,8 +152,8 @@ export function IssueStepper() {
       )}
       {step === 3 && (
         <>
-          <Card>
-            <CardContent className="pt-6 space-y-2 text-sm">
+          <SectionCard title="Confirm issue" accent="emerald">
+            <div className="space-y-2 text-sm">
               <p>Member: {member?.full_name}</p>
               <p>Book: {book?.title}</p>
               <div className="space-y-2">
@@ -160,8 +165,8 @@ export function IssueStepper() {
                   onChange={(e) => setDueDate(e.target.value)}
                 />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </SectionCard>
           <IssueActions loading={loading} onBack={() => setStep(2)} onSubmit={submitIssue} />
         </>
       )}

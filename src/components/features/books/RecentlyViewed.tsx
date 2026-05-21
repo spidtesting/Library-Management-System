@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { RECENTLY_VIEWED_KEY, RECENTLY_VIEWED_MAX } from "@/lib/constants";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/section-card";
 
 export function getRecentlyViewedIds(): string[] {
   if (typeof window === "undefined") return [];
@@ -44,21 +44,24 @@ export function RecentlyViewed({ className }: { className?: string }) {
   if (ids.length === 0) return null;
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-base">Recently viewed</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-1 text-sm">
-          {ids.map((id) => (
-            <li key={id}>
-              <Link href={`/member/browse/${id}`} className="hover:text-brand">
-                {titles[id] ?? id.slice(0, 8)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+    <SectionCard
+      title="Recently viewed"
+      description="Books you opened recently in the catalogue"
+      accent="blue"
+      className={className}
+    >
+      <ul className="space-y-1 text-sm">
+        {ids.map((id) => (
+          <li
+            key={id}
+            className="rounded-md px-2 py-1.5 transition-colors hover:bg-blue-500/[0.06]"
+          >
+            <Link href={`/member/browse/${id}`} className="hover:text-brand">
+              {titles[id] ?? id.slice(0, 8)}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </SectionCard>
   );
 }

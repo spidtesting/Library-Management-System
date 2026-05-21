@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import type { Profile } from "@/types";
+import { SectionCard } from "@/components/ui/section-card";
 import { MemberTable } from "./MemberTable";
 import { BookSearch } from "@/components/features/books/BookSearch";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -87,11 +88,17 @@ export function MembersClient({
           </Select>
         </div>
       </div>
-      <MemberTable
-        members={filtered}
-        canDelete={canDelete}
-        onUpdated={() => router.refresh()}
-      />
+      <SectionCard
+        title="Members"
+        description={`${filtered.length} member${filtered.length === 1 ? "" : "s"} shown`}
+        accent="orange"
+      >
+        <MemberTable
+          members={filtered}
+          canDelete={canDelete}
+          onUpdated={() => router.refresh()}
+        />
+      </SectionCard>
     </div>
   );
 }

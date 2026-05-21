@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { parseApiResponse } from "@/lib/parse-api-response";
 import { Pencil, Trash2, BookCheck, BookX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { borrowAccessBadgeClass } from "@/lib/status-badges";
 import { cn } from "@/lib/utils";
 
 export function MemberTable({
@@ -118,7 +119,10 @@ export function MemberTable({
                 {m.borrow_tokens_used}/{m.borrow_token_limit}
               </TableCell>
               <TableCell>
-                <Badge variant={m.is_active ? "default" : "destructive"}>
+                <Badge
+                  variant={m.is_active ? "default" : "destructive"}
+                  className={borrowAccessBadgeClass(m.is_active)}
+                >
                   {m.is_active ? "Can borrow" : "Blocked"}
                 </Badge>
               </TableCell>
