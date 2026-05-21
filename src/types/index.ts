@@ -75,6 +75,17 @@ export interface IssuedBook {
   member?: Pick<Profile, "id" | "full_name" | "email" | "phone">;
 }
 
+export interface BorrowHistoryRow {
+  id: string;
+  issue_date: string;
+  due_date: string;
+  returned_date: string | null;
+  status: IssueStatus;
+  book_title: string;
+  member_name: string;
+  member_email: string;
+}
+
 export interface ActiveBorrow {
   id: string;
   issue_date: string;

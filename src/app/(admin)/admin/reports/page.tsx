@@ -1,29 +1,22 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/PageHeader";
-import {
-  getOverdueReport,
-  getInventoryReport,
-  getBorrowingHistoryReport,
-} from "@/services/reportService";
+import { getReportsData } from "@/services/reportService";
 import { ReportsClient } from "@/components/features/reports/ReportsClient";
 
 export const metadata: Metadata = { title: "Reports | Admin" };
 
+export const revalidate = 60;
+
 export default async function AdminReportsPage() {
-  const [overdue, inventory, history] = await Promise.all([
-    getOverdueReport(),
-    getInventoryReport(),
-    getBorrowingHistoryReport(),
-  ]);
+  const data = await getReportsData();
 
   return (
     <div>
-      <PageHeader title="Reports" description="Export library data" />
-      <ReportsClient
-        overdue={overdue}
-        inventory={inventory}
-        history={history as Record<string, unknown>[]}
+      <PageHeader
+        title="Reports"
+        description="Library analytics, searchable tables, and CSV exports"
       />
+      <ReportsClient data={data} />
     </div>
   );
 }
