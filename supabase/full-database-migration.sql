@@ -1,19 +1,69 @@
 -- ============================================================
--- PUBLIC LIBRARY MVP — SUPABASE DATABASE SCHEMA
+-- FULL DATABASE MIGRATION — Library Management System
 -- ============================================================
--- Run this entire file in Supabase SQL Editor (in order).
--- Tables → Enums → Indexes → Functions → Triggers → RLS
--- ============================================================
-
-
--- ============================================================
--- 0. EXTENSIONS
+-- ⚠️  DESTRUCTIVE: Deletes ALL library data (books, members, borrows, fines).
+--     Auth users are kept except admin@library.local (recreated).
+--
+-- Run in Supabase Dashboard → SQL Editor → New query → Run ALL
+--
+-- After run, sign in at /login:
+--   Email:    admin@library.local
+--   Password: LibraryAdmin123!
+--
+-- Also set in .env.local:
+--   SUPABASE_SECRET_KEY=sb_secret_...  (NOT the anon key)
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- enables fast LIKE/ILIKE search
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- ============================================================
+-- STEP 1 — TEARDOWN (drop broken / old objects)
+-- ============================================================
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+
+DROP VIEW IF EXISTS v_monthly_borrow_trend CASCADE;
+DROP VIEW IF EXISTS v_admin_stats CASCADE;
+DROP VIEW IF EXISTS v_active_borrows CASCADE;
+
+DROP TABLE IF EXISTS public.activity_logs CASCADE;
+DROP TABLE IF EXISTS public.notifications CASCADE;
+DROP TABLE IF EXISTS public.reservations CASCADE;
+DROP TABLE IF EXISTS public.fines CASCADE;
+DROP TABLE IF EXISTS public.issued_books CASCADE;
+DROP TABLE IF EXISTS public.books CASCADE;
+DROP TABLE IF EXISTS public.settings CASCADE;
+DROP TABLE IF EXISTS public.authors CASCADE;
+DROP TABLE IF EXISTS public.publishers CASCADE;
+DROP TABLE IF EXISTS public.categories CASCADE;
+DROP TABLE IF EXISTS public.profiles CASCADE;
+
+DROP FUNCTION IF EXISTS public.issue_book(UUID, UUID, UUID, DATE) CASCADE;
+DROP FUNCTION IF EXISTS public.return_book(UUID, UUID) CASCADE;
+DROP FUNCTION IF EXISTS public.mark_overdue_books() CASCADE;
+DROP FUNCTION IF EXISTS public.current_user_role() CASCADE;
+DROP FUNCTION IF EXISTS public.set_updated_at() CASCADE;
+
+DROP TYPE IF EXISTS public.reservation_status CASCADE;
+DROP TYPE IF EXISTS public.notif_type CASCADE;
+DROP TYPE IF EXISTS public.fine_status CASCADE;
+DROP TYPE IF EXISTS public.issue_status CASCADE;
+DROP TYPE IF EXISTS public.book_status CASCADE;
+DROP TYPE IF EXISTS public.user_role CASCADE;
+
+-- Remove old admin auth rows (profile recreated in step 3)
+DELETE FROM auth.identities
+WHERE user_id IN (SELECT id FROM auth.users WHERE email = 'admin@library.local');
+
+DELETE FROM auth.users WHERE email = 'admin@library.local';
+
+-- ============================================================
+-- STEP 2 — SCHEMA (tables, functions, RLS)
+-- Paste continues below — same as library_schema.sql body
+-- ============================================================
 -- ============================================================
 -- 1. ENUMS
 -- ============================================================
@@ -75,17 +125,33 @@ BEGIN
   VALUES (
     NEW.id,
     NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+    COALESCE(
+      NULLIF(TRIM(NEW.raw_user_meta_data->>'full_name'), ''),
+      split_part(COALESCE(NEW.email, 'user'), '@', 1)
+    ),
     'member'::public.user_role
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name;
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE LOG 'handle_new_user failed for %: %', NEW.id, SQLERRM;
+    RAISE;
 END;
 $$;
 
+ALTER FUNCTION public.handle_new_user() OWNER TO postgres;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+
+GRANT USAGE ON SCHEMA public TO supabase_auth_admin;
+GRANT ALL ON TABLE public.profiles TO supabase_auth_admin;
+GRANT USAGE ON TYPE public.user_role TO supabase_auth_admin;
 
 
 -- ------------------------------------------------------------
@@ -800,7 +866,8 @@ CREATE POLICY "Anyone can read settings"
 
 CREATE POLICY "Only admins can update settings"
   ON settings FOR UPDATE
-  USING (current_user_role() = 'admin');
+  USING (current_user_role() = 'admin')
+  WITH CHECK (current_user_role() = 'admin');
 
 
 -- ---- ACTIVITY LOGS ------------------------------------------
@@ -863,4 +930,126 @@ SELECT
 --   4. In your Next.js app:
 --        - Use supabaseClient (anon key) for user-facing queries
 --        - Use supabaseAdmin (service_role key) for issue_book() / return_book()
+-- ============================================================
+-- ============================================================
+-- STEP 3 — DEFAULT ADMIN USER
+-- Email: admin@library.local  |  Password: LibraryAdmin123!
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.seed_library_admin()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, extensions
+AS $$
+DECLARE
+  v_admin_id   uuid := gen_random_uuid();
+  v_email      text := 'admin@library.local';
+  v_password   text := 'LibraryAdmin123!';
+  v_full_name  text := 'Library Admin';
+  v_instance   uuid;
+BEGIN
+  SELECT id INTO v_instance FROM auth.instances LIMIT 1;
+  IF v_instance IS NULL THEN
+    v_instance := '00000000-0000-0000-0000-000000000000'::uuid;
+  END IF;
+
+  DELETE FROM auth.identities
+  WHERE user_id IN (SELECT id FROM auth.users WHERE lower(email) = lower(v_email));
+
+  DELETE FROM auth.users WHERE lower(email) = lower(v_email);
+
+  INSERT INTO auth.users (
+    instance_id,
+    id,
+    aud,
+    role,
+    email,
+    encrypted_password,
+    email_confirmed_at,
+    raw_app_meta_data,
+    raw_user_meta_data,
+    created_at,
+    updated_at
+  ) VALUES (
+    v_instance,
+    v_admin_id,
+    'authenticated',
+    'authenticated',
+    v_email,
+    extensions.crypt(v_password, extensions.gen_salt('bf')),
+    NOW(),
+    jsonb_build_object('provider', 'email', 'providers', jsonb_build_array('email')),
+    jsonb_build_object('full_name', v_full_name),
+    NOW(),
+    NOW()
+  );
+
+  INSERT INTO auth.identities (
+    id,
+    user_id,
+    identity_data,
+    provider,
+    provider_id,
+    last_sign_in_at,
+    created_at,
+    updated_at
+  ) VALUES (
+    gen_random_uuid(),
+    v_admin_id,
+    jsonb_build_object(
+      'sub', v_admin_id::text,
+      'email', v_email,
+      'email_verified', true
+    ),
+    'email',
+    v_admin_id::text,
+    NOW(),
+    NOW(),
+    NOW()
+  );
+
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    role,
+    is_active,
+    borrow_token_limit,
+    borrow_tokens_used
+  ) VALUES (
+    v_admin_id,
+    v_email,
+    v_full_name,
+    'admin'::public.user_role,
+    TRUE,
+    10,
+    0
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    full_name = EXCLUDED.full_name,
+    role = 'admin'::public.user_role,
+    is_active = TRUE;
+
+  RAISE NOTICE 'Admin ready: % / %', v_email, v_password;
+END;
+$$;
+
+SELECT public.seed_library_admin();
+DROP FUNCTION IF EXISTS public.seed_library_admin();
+
+-- ============================================================
+-- DONE
+-- ============================================================
+-- Login: http://localhost:3000/login
+--   admin@library.local / LibraryAdmin123!
+--
+-- If admin seed failed above, run instead:
+--   npm run create-admin
+-- (requires SUPABASE_SECRET_KEY in .env.local)
+--
+-- Set SUPABASE_SECRET_KEY in .env.local (Dashboard → API → Secret keys)
+-- Restart: npm run dev
+-- Verify:  npm run check-env
 -- ============================================================

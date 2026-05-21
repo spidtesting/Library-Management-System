@@ -1,0 +1,49 @@
+[   15647ms] [ERROR] Failed to fetch PH flags: API is not available @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   15648ms] [WARNING] [FeatureFlags] PostHog flags failed TypeError: Failed to fetch (api.supabase.com)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:13:1799
+    at tk (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0nwv_f~miu7tp.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:5:117245)
+    at async t0 (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0nwv_f~miu7tp.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:5:126246)
+    at async Promise.allSettled (index 0)
+    at async https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0nwv_f~miu7tp.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:5:127575 @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   15651ms] [ERROR] Failed to initialize Usercentrics: TypeError: Failed to fetch (api.usercentrics.eu)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:13:1799
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:46072
+    at Object.next (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:14005)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12965
+    at new Promise (<anonymous>)
+    at M (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12714)
+    at tU (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:45818)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:45654
+    at Object.next (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:14005)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12965
+    at new Promise (<anonymous>)
+    at M (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12714)
+    at tP (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:45585)
+    at e.<anonymous> (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:61822)
+    at Object.next (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:14005)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12965
+    at new Promise (<anonymous>)
+    at M (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12714)
+    at e.fetchRuleset (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:61699)
+    at e.<anonymous> (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:93485)
+    at Object.next (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:14005)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12965
+    at new Promise (<anonymous>)
+    at M (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12714)
+    at e.resolveSettingsId (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:93358)
+    at e.<anonymous> (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:261737)
+    at Object.next (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:14005)
+    at https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12965
+    at new Promise (<anonymous>)
+    at M (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:12714)
+    at e.init (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0~4sz39c_mg-o.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:2:261383)
+    at t (https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0nwv_f~miu7tp.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:5:112205) @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   17101ms] [WARNING] ConfigCat - WARN - [3003] Cannot evaluate condition (User.plan IS ONE OF ['team']) for setting 'unifiedLogs' (the User.plan attribute is missing). You should set the User.plan attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/ @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   17101ms] [WARNING] ConfigCat - WARN - [3003] Cannot evaluate condition (User.plan IS ONE OF ['enterprise']) for setting 'unifiedLogs' (the User.plan attribute is missing). You should set the User.plan attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/ @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   17101ms] [WARNING] ConfigCat - WARN - [3003] Cannot evaluate condition (User.plan IS ONE OF ['pro']) for setting 'unifiedLogs' (the User.plan attribute is missing). You should set the User.plan attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/ @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   35736ms] [ERROR] Connecting to 'https://analytics.google.com/g/collect?a=adblocker_check' violates the following Content Security Policy directive: "connect-src 'self' data: blob: https://api.supabase.com http://localhost:8000 https://auth.supabase.io https://otqhrpbxhxkrhrnjqbba.supabase.co ws://localhost:8000 wss://localhost:8000 https://*.supabase.co https://*.storage.supabase.co wss://*.supabase.co https://*.hcaptcha.com https://cdn-global.configcat.com https://configcat.supabase.com https://*.stripe.com https://*.stripe.network https://www.cloudflare.com https://*.vercel-insights.com https://api.github.com https://raw.githubusercontent.com https://frontend-assets.supabase.com https://*.usercentrics.eu https://ss.supabase.com https://maps.googleapis.com https://ph.supabase.com https://cdnjs.cloudflare.com wss://*.pusher.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io". The action has been blocked. @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[   35738ms] [ERROR] Fetch API cannot load https://analytics.google.com/g/collect?a=adblocker_check. Refused to connect because it violates the document's Content Security Policy. @ https://frontend-assets.supabase.com/studio/72cebe397607/_next/static/chunks/0c.7zcpqrqwgq.js?dpl=dpl_F86Szi6wzBMEjvwRRLwX5r4HSs8B:12
+[  142147ms] [ERROR] Failed to load resource: the server responded with a status of 504 () @ https://supabase.com/dashboard/api/incident-banner:0
+[  203846ms] [ERROR] Failed to load resource: the server responded with a status of 504 () @ https://supabase.com/dashboard/api/incident-banner:0
+[  268537ms] [ERROR] Failed to load resource: the server responded with a status of 504 () @ https://supabase.com/dashboard/api/incident-banner:0
+[  346865ms] [ERROR] Failed to load resource: the server responded with a status of 504 () @ https://supabase.com/dashboard/api/incident-banner:0

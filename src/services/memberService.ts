@@ -1,6 +1,8 @@
 import { createClient } from "@/services/supabase/server";
 import { createAdminClient } from "@/services/supabase/admin";
-import type { Profile, IssuedBook, PaginatedResponse } from "@/types";
+import { createSignUpClient } from "@/services/supabase/signup-client";
+import { isServiceRoleConfigured } from "@/lib/supabase/service-role";
+import type { Profile, IssuedBook, PaginatedResponse, UserRole } from "@/types";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { emptyToNull } from "@/lib/sanitize-input";
 import type { MemberCreateInput } from "@/lib/validations";
@@ -25,7 +27,7 @@ export async function getMembers(params: {
 
   if (params.search) {
     query = query.or(
-      `full_name.ilike.%${params.search}%,email.ilike.%${params.search}%`
+      `full_name.ilike.%${params.search}%,email.ilike.%${params.search}%,nic_number.ilike.%${params.search}%`
     );
   }
 
@@ -100,57 +102,136 @@ export async function updateMember(
   id: string,
   updates: Partial<Pick<Profile, "is_active" | "borrow_token_limit" | "full_name" | "phone" | "address">>
 ) {
-  const admin = createAdminClient();
+  const supabase = await createClient();
   const payload = emptyToNull(updates as Record<string, unknown>);
-  const { error } = await admin
+  const { data, error } = await supabase
     .from("profiles")
     .update(payload)
     .eq("id", id)
-    .eq("role", "member");
-  if (error) throw new Error(`updateMember failed: ${error.message}`);
-}
-
-export async function createMember(input: MemberCreateInput): Promise<Profile> {
-  const admin = createAdminClient();
-
-  const { data: created, error: authError } = await admin.auth.admin.createUser({
-    email: input.email,
-    password: input.password,
-    email_confirm: true,
-    user_metadata: { full_name: input.full_name },
-  });
-
-  if (authError) {
+    .eq("role", "member")
+    .select("id")
+    .maybeSingle();
+  if (error) {
     throw new Error(
-      authError.message.includes("already")
-        ? "A user with this email already exists"
-        : authError.message
+      error.message.includes("row-level security")
+        ? "updateMember failed: not allowed (run supabase/fix-member-create.sql or sign in as admin/librarian)"
+        : `updateMember failed: ${error.message}`
     );
   }
+  if (!data) throw new Error("Member not found");
+}
 
-  const userId = created.user.id;
+async function rollbackAuthUser(userId: string) {
+  if (!isServiceRoleConfigured()) return;
+  try {
+    await createAdminClient().auth.admin.deleteUser(userId);
+  } catch {
+    // best-effort cleanup
+  }
+}
+
+function mapAuthError(message: string): string {
+  const msg = message.toLowerCase();
+  if (msg.includes("already") || msg.includes("registered")) {
+    return "A user with this email already exists";
+  }
+  if (msg.includes("rate limit")) {
+    return (
+      "Email rate limit exceeded. Wait a few minutes and try again, or add SUPABASE_SECRET_KEY to .env.local " +
+      "(Dashboard → API → Secret key) so accounts are created without sending signup emails."
+    );
+  }
+  if (msg.includes("signups not allowed") || msg.includes("signup is disabled")) {
+    return "Email signups are disabled in Supabase. Enable them under Authentication → Providers → Email.";
+  }
+  if (msg.includes("invalid") && msg.includes("email")) {
+    return "That email address is not accepted. Use a standard address (e.g. @gmail.com).";
+  }
+  if (msg.includes("database error") || msg.includes("trigger")) {
+    return "Auth signup failed (broken profile trigger). Run supabase/fix-member-create.sql in the SQL Editor.";
+  }
+  return message;
+}
+
+async function createAuthUser(
+  email: string,
+  password: string,
+  fullName: string
+): Promise<{ userId: string }> {
+  if (isServiceRoleConfigured()) {
+    const admin = createAdminClient();
+    const { data, error } = await admin.auth.admin.createUser({
+      email: email.toLowerCase(),
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (error) throw new Error(mapAuthError(error.message));
+    if (!data.user?.id) throw new Error("Account was not created");
+    return { userId: data.user.id };
+  }
+
+  const signUpClient = createSignUpClient();
+  const { data, error } = await signUpClient.auth.signUp({
+    email: email.toLowerCase(),
+    password,
+    options: { data: { full_name: fullName } },
+  });
+  if (error) throw new Error(mapAuthError(error.message));
+  if (!data.user?.id) {
+    throw new Error(
+      "Account was not created. In Supabase → Authentication → Email, disable “Confirm email” for immediate access."
+    );
+  }
+  return { userId: data.user.id };
+}
+
+export async function createMember(
+  input: MemberCreateInput,
+  options?: { forcedRole?: UserRole }
+): Promise<Profile> {
+  const role: UserRole = options?.forcedRole ?? input.role ?? "member";
+  const supabase = await createClient();
+  const isLibraryMember = role === "member";
+
+  const { userId } = await createAuthUser(
+    input.email,
+    input.password,
+    input.full_name
+  );
+
   const profilePayload = {
     id: userId,
     email: input.email.toLowerCase(),
-    nic_number: normalizeNic(input.nic_number),
+    nic_number: isLibraryMember && input.nic_number ? normalizeNic(input.nic_number) : null,
     full_name: input.full_name,
-    role: "member" as const,
+    role,
     phone: input.phone ?? null,
     address: input.address ?? null,
-    borrow_token_limit: input.borrow_token_limit,
+    borrow_token_limit: isLibraryMember ? input.borrow_token_limit : 0,
     borrow_tokens_used: 0,
-    is_active: input.is_active,
+    is_active: isLibraryMember ? input.is_active : true,
   };
 
-  const { data, error: profileError } = await admin
+  const { data, error: profileError } = await supabase
     .from("profiles")
     .upsert(profilePayload, { onConflict: "id" })
     .select(PROFILE_COLUMNS)
     .single();
 
   if (profileError) {
-    await admin.auth.admin.deleteUser(userId);
+    await rollbackAuthUser(userId);
     const msg = profileError.message.toLowerCase();
+    if (msg.includes("nic_number") && (msg.includes("does not exist") || msg.includes("column"))) {
+      throw new Error(
+        "Database missing nic_number column. Run supabase/fix-member-create.sql in the SQL Editor."
+      );
+    }
+    if (msg.includes("row-level security")) {
+      throw new Error(
+        "Could not save profile. Run supabase/fix-member-create.sql, or only admins can create librarian/admin accounts."
+      );
+    }
     if (msg.includes("nic_number") || msg.includes("unique")) {
       throw new Error("A member with this NIC number already exists");
     }
@@ -161,9 +242,9 @@ export async function createMember(input: MemberCreateInput): Promise<Profile> {
 }
 
 export async function deleteMember(id: string): Promise<void> {
-  const admin = createAdminClient();
+  const supabase = await createClient();
 
-  const { count, error: borrowError } = await admin
+  const { count, error: borrowError } = await supabase
     .from("issued_books")
     .select("id", { count: "exact", head: true })
     .eq("member_id", id)
@@ -176,13 +257,20 @@ export async function deleteMember(id: string): Promise<void> {
     );
   }
 
+  if (!isServiceRoleConfigured()) {
+    throw new Error(
+      "Full account delete needs SUPABASE_SECRET_KEY. Block borrowing instead, or add the secret key from Dashboard → API."
+    );
+  }
+
+  const admin = createAdminClient();
   const { error: authError } = await admin.auth.admin.deleteUser(id);
   if (authError) throw new Error(`deleteMember failed: ${authError.message}`);
 }
 
 export async function countActiveBorrows(memberId: string): Promise<number> {
-  const admin = createAdminClient();
-  const { count, error } = await admin
+  const supabase = await createClient();
+  const { count, error } = await supabase
     .from("issued_books")
     .select("id", { count: "exact", head: true })
     .eq("member_id", memberId)

@@ -3,17 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Image from "next/image";
 import { bookSchema, type BookInput } from "@/lib/validations";
 import type { Book } from "@/types";
+import { BookCoverPicker } from "@/components/features/books/BookCoverPicker";
+import { BookCoverImage } from "@/components/features/books/BookCoverImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ALLOWED_COVER_TYPES, MAX_COVER_SIZE_BYTES } from "@/lib/constants";
 import { useState } from "react";
 import { parseApiResponse } from "@/lib/parse-api-response";
+import { isCoverDataUrl } from "@/lib/cover-image";
 
 export function BookEditForm({
   book,
@@ -25,7 +27,9 @@ export function BookEditForm({
   canDelete?: boolean;
 }) {
   const router = useRouter();
-  const [uploading, setUploading] = useState(false);
+  const initialCover = book.cover_url && isCoverDataUrl(book.cover_url) ? book.cover_url : null;
+  const [coverBase64, setCoverBase64] = useState<string | null>(initialCover);
+  const [coverDirty, setCoverDirty] = useState(false);
 
   const {
     register,
@@ -46,11 +50,18 @@ export function BookEditForm({
     },
   });
 
+  const previewUrl = coverDirty ? coverBase64 : book.cover_url;
+
   async function onSubmit(values: BookInput) {
+    const payload: BookInput & { cover_base64?: string | null } = { ...values };
+    if (coverDirty) {
+      payload.cover_base64 = coverBase64;
+    }
+
     const res = await fetch(`/api/books/${book.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
     const data = await parseApiResponse(res);
     if (!res.ok) {
@@ -61,34 +72,9 @@ export function BookEditForm({
     router.refresh();
   }
 
-  async function onCoverChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!ALLOWED_COVER_TYPES.includes(file.type)) {
-      toast.error("Invalid file type");
-      return;
-    }
-    if (file.size > MAX_COVER_SIZE_BYTES) {
-      toast.error("File too large (max 2MB)");
-      return;
-    }
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append("cover", file);
-      const res = await fetch(`/api/books/${book.id}`, {
-        method: "PATCH",
-        body: form,
-      });
-      const data = await parseApiResponse(res);
-      if (!res.ok) throw new Error(data.error ?? "Upload failed");
-      toast.success("Cover uploaded");
-      router.refresh();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Upload failed");
-    } finally {
-      setUploading(false);
-    }
+  function onCoverChange(next: string | null) {
+    setCoverBase64(next);
+    setCoverDirty(true);
   }
 
   async function onDelete() {
@@ -105,68 +91,83 @@ export function BookEditForm({
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-2">
-      <div className="space-y-4">
-        {book.cover_url ? (
-          <Image
-            src={book.cover_url}
-            alt={book.title}
-            width={200}
-            height={280}
-            className="rounded-lg object-cover"
-          />
-        ) : (
-          <div className="h-70 w-50 rounded-lg bg-muted" />
-        )}
-        <div className="space-y-2">
-          <Label htmlFor="cover">Cover image</Label>
-          <Input
-            id="cover"
-            type="file"
-            accept={ALLOWED_COVER_TYPES.join(",")}
-            onChange={onCoverChange}
-            disabled={uploading}
-          />
-        </div>
-      </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Field label="Title" id="title" error={errors.title?.message}>
-          <Input id="title" {...register("title")} />
-        </Field>
-        <Field label="ISBN" id="isbn">
-          <Input id="isbn" {...register("isbn")} />
-        </Field>
-        <Field label="Description" id="description">
-          <Textarea id="description" {...register("description")} />
-        </Field>
-        <Field label="Total copies" id="total_copies" error={errors.total_copies?.message}>
-          <Input
-            id="total_copies"
-            type="number"
-            min={1}
-            {...register("total_copies", { valueAsNumber: true })}
-          />
-        </Field>
-        <Field label="Shelf" id="shelf_number">
-          <Input id="shelf_number" {...register("shelf_number")} />
-        </Field>
-        <Field label="Rack" id="rack_number">
-          <Input id="rack_number" {...register("rack_number")} />
-        </Field>
-        <p className="text-sm text-muted-foreground">
-          Available: {book.available_copies} copies
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving…" : "Save changes"}
-          </Button>
-          {canDelete && (
-            <Button type="button" variant="destructive" onClick={onDelete}>
-              Delete
-            </Button>
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Cover photo</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {previewUrl ? (
+            <BookCoverImage
+              src={previewUrl}
+              alt={book.title}
+              width={200}
+              height={280}
+              className="mx-auto rounded-lg object-cover"
+            />
+          ) : (
+            <div className="mx-auto flex h-[280px] w-[200px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
+              No cover
+            </div>
           )}
-        </div>
-      </form>
+          <BookCoverPicker
+            value={coverDirty ? coverBase64 : coverBase64}
+            onChange={onCoverChange}
+            disabled={isSubmitting}
+          />
+          {book.cover_url && !isCoverDataUrl(book.cover_url) && !coverDirty && (
+            <p className="text-xs text-muted-foreground">
+              This book has a storage URL cover. Upload or take a new photo to replace it with a saved base64 image.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <Field label="Title" id="title" error={errors.title?.message}>
+              <Input id="title" {...register("title")} />
+            </Field>
+            <Field label="ISBN" id="isbn">
+              <Input id="isbn" {...register("isbn")} />
+            </Field>
+            <Field label="Description" id="description">
+              <Textarea id="description" {...register("description")} />
+            </Field>
+            <Field label="Total copies" id="total_copies" error={errors.total_copies?.message}>
+              <Input
+                id="total_copies"
+                type="number"
+                min={1}
+                {...register("total_copies", { valueAsNumber: true })}
+              />
+            </Field>
+            <Field label="Shelf" id="shelf_number">
+              <Input id="shelf_number" {...register("shelf_number")} />
+            </Field>
+            <Field label="Rack" id="rack_number">
+              <Input id="rack_number" {...register("rack_number")} />
+            </Field>
+            <p className="text-sm text-muted-foreground">
+              Available: {book.available_copies} copies
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving…" : "Save changes"}
+              </Button>
+              {canDelete && (
+                <Button type="button" variant="destructive" onClick={onDelete}>
+                  Delete
+                </Button>
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

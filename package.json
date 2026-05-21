@@ -10,7 +10,8 @@
     "create-admin": "node scripts/create-admin.mjs",
     "promote-admin": "node scripts/promote-admin.mjs",
     "fix-auth-trigger": "node scripts/fix-auth-trigger.mjs",
-    "apply-nic-migration": "node scripts/apply-nic-migration.mjs"
+    "apply-nic-migration": "node scripts/apply-nic-migration.mjs",
+    "check-env": "node scripts/check-supabase-env.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",

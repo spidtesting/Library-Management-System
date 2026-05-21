@@ -33,7 +33,7 @@ export default async function AdminMembersPage({
       <PageHeader
         title="Members"
         description="Create accounts, control borrow access, and manage member details"
-        action={<MemberCreateDialog />}
+        action={<MemberCreateDialog actorRole={profile.role} />}
       />
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <MembersClient

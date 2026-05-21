@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import type { Book } from "@/types";
+import { BookCoverImage } from "@/components/features/books/BookCoverImage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { addRecentlyViewed } from "./RecentlyViewed";
@@ -38,7 +38,7 @@ export function BookDetailClient({ book }: { book: Book }) {
   return (
     <div className="grid gap-8 md:grid-cols-2">
       {book.cover_url ? (
-        <Image
+        <BookCoverImage
           src={book.cover_url}
           alt={book.title}
           width={240}

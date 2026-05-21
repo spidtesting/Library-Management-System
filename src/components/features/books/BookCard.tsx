@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Book } from "@/types";
+import { BookCoverImage } from "@/components/features/books/BookCoverImage";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ export function BookCard({
       <Card className="h-full gap-0 overflow-hidden py-0 transition-shadow hover:shadow-md">
         <div className="aspect-[3/4] w-full overflow-hidden bg-muted">
           {book.cover_url ? (
-            <Image
+            <BookCoverImage
               src={book.cover_url}
               alt=""
               width={240}

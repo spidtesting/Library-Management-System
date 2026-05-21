@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { isValidCoverDataUrl } from "@/lib/cover-image";
+
+const staffRoleSchema = z.enum(["member", "librarian", "admin"]);
 
 export const nicNumberSchema = z
   .string()
@@ -65,6 +68,18 @@ export const bookSchema = z.object({
   shelf_number: optionalText,
   rack_number: optionalText,
   status: z.enum(["available", "unavailable"]),
+  cover_base64: z.preprocess(
+    (v) => (v === "" ? undefined : v),
+    z
+      .union([
+        z.null(),
+        z.string().refine(
+          (val) => isValidCoverDataUrl(val),
+          "Cover must be a JPEG/PNG/WebP image up to 2MB"
+        ),
+      ])
+      .optional()
+  ),
 });
 
 export const issueSchema = z.object({
@@ -102,22 +117,45 @@ export const profileSelfUpdateSchema = z.object({
   ),
 });
 
-export const memberCreateSchema = z.object({
-  full_name: z.string().min(2, "Name must be at least 2 characters"),
-  nic_number: nicNumberSchema,
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  phone: z.preprocess(
-    (v) => (v === "" || v === undefined ? null : v),
-    z.string().nullable().optional()
-  ),
-  address: z.preprocess(
-    (v) => (v === "" || v === undefined ? null : v),
-    z.string().nullable().optional()
-  ),
-  borrow_token_limit: z.coerce.number().int().min(1).max(20),
-  is_active: z.boolean(),
-});
+const optionalNic = z.preprocess(
+  (v) => (v === "" || v === undefined ? undefined : v),
+  nicNumberSchema.optional()
+);
+
+export const memberCreateSchema = z
+  .object({
+    full_name: z.string().min(2, "Name must be at least 2 characters"),
+    nic_number: optionalNic,
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    phone: z.preprocess(
+      (v) => (v === "" || v === undefined ? null : v),
+      z.string().nullable().optional()
+    ),
+    address: z.preprocess(
+      (v) => (v === "" || v === undefined ? null : v),
+      z.string().nullable().optional()
+    ),
+    role: staffRoleSchema.default("member"),
+    borrow_token_limit: z.coerce.number().int().min(0).max(20).default(3),
+    is_active: z.boolean().default(true),
+  })
+  .superRefine((data, ctx) => {
+    if (data.role === "member" && !data.nic_number) {
+      ctx.addIssue({
+        code: "custom",
+        message: "NIC number is required for library members",
+        path: ["nic_number"],
+      });
+    }
+    if (data.role === "member" && data.borrow_token_limit < 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Members need at least 1 borrow token",
+        path: ["borrow_token_limit"],
+      });
+    }
+  });
 
 export const memberUpdateSchema = z.object({
   is_active: z.boolean().optional(),

@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import Image from "next/image";
+import { BookCoverImage } from "@/components/features/books/BookCoverImage";
 
 export function BookTable({
   books,
@@ -42,7 +42,7 @@ export function BookTable({
             <TableRow key={book.id}>
               <TableCell>
                 {book.cover_url ? (
-                  <Image
+                  <BookCoverImage
                     src={book.cover_url}
                     alt=""
                     width={40}

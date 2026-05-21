@@ -71,24 +71,34 @@ export async function getBookById(id: string): Promise<Book | null> {
 }
 
 export async function createBook(input: BookInput) {
-  const admin = createAdminClient();
-  const payload = sanitizeBookInput(input) as BookInput;
+  const supabase = await createClient();
+  const payload = sanitizeBookInput(input);
 
-  const { data, error } = await admin
+  const { cover_url, ...bookFields } = payload;
+  const insertRow = {
+    ...bookFields,
+    available_copies: bookFields.total_copies ?? 1,
+    ...(cover_url ? { cover_url } : {}),
+  };
+
+  const { data, error } = await supabase
     .from("books")
-    .insert({
-      ...payload,
-      available_copies: payload.total_copies,
-    })
+    .insert(insertRow)
     .select("id")
     .single();
 
-  if (error) throw new Error(`createBook failed: ${error.message}`);
+  if (error) {
+    throw new Error(
+      error.message.includes("row-level security")
+        ? "createBook failed: not allowed (sign in as admin/librarian or set SUPABASE_SECRET_KEY)"
+        : `createBook failed: ${error.message}`
+    );
+  }
   return data;
 }
 
 export async function updateBook(id: string, input: Partial<BookInput>) {
-  const admin = createAdminClient();
+  const supabase = await createClient();
   const payload = sanitizeBookInput(input);
 
   if (payload.total_copies !== undefined) {
@@ -104,17 +114,52 @@ export async function updateBook(id: string, input: Partial<BookInput>) {
     }
   }
 
-  const { error } = await admin.from("books").update(payload).eq("id", id);
+  const { cover_url, ...bookFields } = payload;
+  const updateRow = {
+    ...bookFields,
+    ...(cover_url !== undefined ? { cover_url } : {}),
+  };
+
+  const { error } = await supabase.from("books").update(updateRow).eq("id", id);
   if (error) throw new Error(`updateBook failed: ${error.message}`);
 }
 
 export async function softDeleteBook(id: string) {
-  const admin = createAdminClient();
-  const { error } = await admin
+  const supabase = await createClient();
+
+  const { count, error: borrowError } = await supabase
+    .from("issued_books")
+    .select("id", { count: "exact", head: true })
+    .eq("book_id", id)
+    .in("status", ["issued", "overdue"]);
+
+  if (borrowError) {
+    throw new Error(`softDeleteBook check failed: ${borrowError.message}`);
+  }
+  if ((count ?? 0) > 0) {
+    throw new Error(
+      "Cannot delete this book while copies are still on loan. Return all copies first."
+    );
+  }
+
+  const { data, error } = await supabase
     .from("books")
     .update({ deleted_at: new Date().toISOString(), status: "deleted" })
-    .eq("id", id);
-  if (error) throw new Error(`softDeleteBook failed: ${error.message}`);
+    .eq("id", id)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      error.message.includes("row-level security")
+        ? "softDeleteBook failed: not allowed (sign in as admin or set SUPABASE_SECRET_KEY)"
+        : `softDeleteBook failed: ${error.message}`
+    );
+  }
+  if (!data) {
+    throw new Error("Book not found or already deleted");
+  }
 }
 
 export async function uploadCover(bookId: string, file: Buffer, contentType: string) {

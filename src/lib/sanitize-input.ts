@@ -12,13 +12,23 @@ export function emptyToNull<T extends Record<string, unknown>>(obj: T): T {
   return out;
 }
 
-export function sanitizeBookInput(input: Partial<BookInput>): Partial<BookInput> {
-  const cleaned = emptyToNull(input as Record<string, unknown>) as Partial<BookInput>;
+export function sanitizeBookInput(
+  input: Partial<BookInput>
+): Partial<BookInput> & { cover_url?: string | null } {
+  const { cover_base64, ...rest } = input;
+  const cleaned = emptyToNull(rest as Record<string, unknown>) as Partial<BookInput>;
   if (cleaned.isbn === null) delete cleaned.isbn;
   if (cleaned.subtitle === null) delete cleaned.subtitle;
   if (cleaned.description === null) delete cleaned.description;
   if (cleaned.shelf_number === null) delete cleaned.shelf_number;
   if (cleaned.rack_number === null) delete cleaned.rack_number;
   if (cleaned.edition === null) delete cleaned.edition;
-  return cleaned;
+
+  const out = cleaned as Partial<BookInput> & { cover_url?: string | null };
+  if (cover_base64 === null) {
+    out.cover_url = null;
+  } else if (cover_base64) {
+    out.cover_url = cover_base64;
+  }
+  return out;
 }

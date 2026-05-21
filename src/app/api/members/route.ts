@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return apiError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
-    const member = await createMember(parsed.data);
+    const forcedRole = auth.profile.role === "librarian" ? ("member" as const) : undefined;
+    const member = await createMember(parsed.data, { forcedRole });
     revalidatePath("/admin/members");
     return apiSuccess(member, 201);
   } catch (e) {
