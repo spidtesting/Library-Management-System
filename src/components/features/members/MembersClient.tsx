@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import type { Profile } from "@/types";
+import type { Profile, UserRole } from "@/types";
 import { SectionCard } from "@/components/ui/section-card";
 import { MemberTable } from "./MemberTable";
 import { BookSearch } from "@/components/features/books/BookSearch";
@@ -19,10 +19,15 @@ import { Label } from "@/components/ui/label";
 export function MembersClient({
   initialMembers,
   canDelete = false,
+  viewerRole,
+  listPath = "/admin/members",
 }: {
   initialMembers: Profile[];
   canDelete?: boolean;
+  viewerRole: UserRole;
+  listPath?: string;
 }) {
+  const isAdminView = viewerRole === "admin";
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
@@ -41,10 +46,10 @@ export function MembersClient({
       });
       const qs = params.toString();
       startTransition(() => {
-        router.replace(qs ? `/admin/members?${qs}` : "/admin/members");
+        router.replace(qs ? `${listPath}?${qs}` : listPath);
       });
     },
-    [router, searchParams]
+    [router, searchParams, listPath]
   );
 
   useEffect(() => {
@@ -58,8 +63,12 @@ export function MembersClient({
   }, [initialMembers]);
 
   const filtered = members.filter((m) => {
-    if (statusFilter === "active") return m.is_active;
-    if (statusFilter === "blocked") return !m.is_active;
+    if (statusFilter === "active") {
+      return m.role !== "member" || m.is_active;
+    }
+    if (statusFilter === "blocked") {
+      return m.role === "member" && !m.is_active;
+    }
     return true;
   });
 
@@ -72,7 +81,9 @@ export function MembersClient({
           placeholder="Search by name or email…"
         />
         <div className="space-y-2">
-          <Label htmlFor="member-status">Borrow access</Label>
+          <Label htmlFor="member-status">
+            {isAdminView ? "Borrow access (members)" : "Borrow access"}
+          </Label>
           <Select
             value={statusFilter}
             onValueChange={(v) => v && updateParams({ status: v === "all" ? null : v })}
@@ -81,7 +92,7 @@ export function MembersClient({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All members</SelectItem>
+              <SelectItem value="all">{isAdminView ? "All accounts" : "All members"}</SelectItem>
               <SelectItem value="active">Can borrow</SelectItem>
               <SelectItem value="blocked">Borrow blocked</SelectItem>
             </SelectContent>
@@ -89,13 +100,19 @@ export function MembersClient({
         </div>
       </div>
       <SectionCard
-        title="Members"
-        description={`${filtered.length} member${filtered.length === 1 ? "" : "s"} shown`}
+        title={isAdminView ? "Accounts" : "Members"}
+        description={
+          isAdminView
+            ? `${filtered.length} account${filtered.length === 1 ? "" : "s"} shown (members, librarians, admins)`
+            : `${filtered.length} member${filtered.length === 1 ? "" : "s"} shown`
+        }
         accent="orange"
       >
         <MemberTable
           members={filtered}
           canDelete={canDelete}
+          listPath={listPath}
+          showRole={isAdminView}
           onUpdated={() => router.refresh()}
         />
       </SectionCard>

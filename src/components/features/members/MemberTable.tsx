@@ -19,18 +19,22 @@ import { parseApiResponse } from "@/lib/parse-api-response";
 import { Pencil, Trash2, BookCheck, BookX } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { ResponsiveTableShell } from "@/components/ui/responsive-table-shell";
-import { borrowAccessBadgeClass } from "@/lib/status-badges";
+import { borrowAccessBadgeClass, formatRoleLabel, roleBadgeClass } from "@/lib/status-badges";
 import { cn } from "@/lib/utils";
 
 export function MemberTable({
   members,
   isLoading = false,
   canDelete = false,
+  listPath = "/admin/members",
+  showRole = false,
   onUpdated,
 }: {
   members: Profile[];
   isLoading?: boolean;
   canDelete?: boolean;
+  listPath?: string;
+  showRole?: boolean;
   onUpdated?: () => void;
 }) {
   const router = useRouter();
@@ -47,11 +51,14 @@ export function MemberTable({
 
   if (members.length === 0) {
     return (
-      <p className="py-8 text-center text-muted-foreground">No members found.</p>
+      <p className="py-8 text-center text-muted-foreground">
+        {showRole ? "No accounts found." : "No members found."}
+      </p>
     );
   }
 
   async function toggleBorrowAccess(member: Profile) {
+    if (member.role !== "member") return;
     const next = !member.is_active;
     const res = await fetch("/api/members", {
       method: "PATCH",
@@ -94,6 +101,7 @@ export function MemberTable({
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
+            {showRole && <TableHead>Role</TableHead>}
             <TableHead className="hidden md:table-cell">NIC</TableHead>
             <TableHead className="hidden lg:table-cell">Email</TableHead>
             <TableHead>Tokens</TableHead>
@@ -102,50 +110,71 @@ export function MemberTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {members.map((m) => (
+          {members.map((m) => {
+            const isLibraryMember = m.role === "member";
+            return (
             <TableRow key={m.id}>
               <TableCell>
                 <Link
-                  href={`/admin/members/${m.id}`}
+                  href={`${listPath}/${m.id}`}
                   className="font-medium hover:text-brand"
                 >
                   {m.full_name}
                 </Link>
                 <p className="truncate text-xs text-muted-foreground lg:hidden">{m.email}</p>
               </TableCell>
+              {showRole && (
+                <TableCell>
+                  <Badge variant="outline" className={roleBadgeClass(m.role)}>
+                    {formatRoleLabel(m.role)}
+                  </Badge>
+                </TableCell>
+              )}
               <TableCell className="hidden font-mono text-sm text-muted-foreground md:table-cell">
                 {m.nic_number ?? "—"}
               </TableCell>
               <TableCell className="hidden text-muted-foreground lg:table-cell">{m.email}</TableCell>
               <TableCell>
-                {m.borrow_tokens_used}/{m.borrow_token_limit}
+                {isLibraryMember ? (
+                  <>
+                    {m.borrow_tokens_used}/{m.borrow_token_limit}
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={m.is_active ? "default" : "destructive"}
-                  className={borrowAccessBadgeClass(m.is_active)}
-                >
-                  {m.is_active ? "Can borrow" : "Blocked"}
-                </Badge>
+                {isLibraryMember ? (
+                  <Badge
+                    variant={m.is_active ? "default" : "destructive"}
+                    className={borrowAccessBadgeClass(m.is_active)}
+                  >
+                    {m.is_active ? "Can borrow" : "Blocked"}
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">Staff</span>
+                )}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    title={m.is_active ? "Block borrowing" : "Allow borrowing"}
-                    onClick={() => toggleBorrowAccess(m)}
-                  >
-                    {m.is_active ? (
-                      <BookX className="h-4 w-4" />
-                    ) : (
-                      <BookCheck className="h-4 w-4" />
-                    )}
-                  </Button>
+                  {isLibraryMember && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      title={m.is_active ? "Block borrowing" : "Allow borrowing"}
+                      onClick={() => toggleBorrowAccess(m)}
+                    >
+                      {m.is_active ? (
+                        <BookX className="h-4 w-4" />
+                      ) : (
+                        <BookCheck className="h-4 w-4" />
+                      )}
+                    </Button>
+                  )}
                   <Link
-                    href={`/admin/members/${m.id}`}
-                    title="Edit member"
+                    href={`${listPath}/${m.id}`}
+                    title="Edit account"
                     className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
                   >
                     <Pencil className="h-4 w-4" />
@@ -165,7 +194,8 @@ export function MemberTable({
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+          );
+          })}
         </TableBody>
       </Table>
     </ResponsiveTableShell>

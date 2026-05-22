@@ -193,8 +193,8 @@ export function MemberCreateDialog({ actorRole }: { actorRole: UserRole }) {
             {isAdmin && !isMemberRole && (
               <p className="text-xs text-muted-foreground rounded-lg border bg-muted/30 p-3">
                 {selectedRole === "librarian"
-                  ? "Librarian accounts use the librarian portal and will not appear in the members list below."
-                  : "Admin accounts have full access and will not appear in the members list below."}
+                  ? "Librarian accounts use the librarian portal and appear in the accounts list with role Librarian."
+                  : "Admin accounts have full access and appear in the accounts list with role Admin."}
               </p>
             )}
 

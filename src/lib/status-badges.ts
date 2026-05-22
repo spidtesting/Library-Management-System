@@ -1,4 +1,20 @@
 import { cn } from "@/lib/utils";
+import type { UserRole } from "@/types";
+
+export function roleBadgeClass(role: UserRole) {
+  switch (role) {
+    case "admin":
+      return "border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300";
+    case "librarian":
+      return "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300";
+    default:
+      return "border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-300";
+  }
+}
+
+export function formatRoleLabel(role: UserRole) {
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
 
 export function borrowAccessBadgeClass(isActive: boolean) {
   return isActive

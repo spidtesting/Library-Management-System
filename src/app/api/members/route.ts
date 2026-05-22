@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     const result = await getMembers({
       page: Number(searchParams.get("page") ?? 1),
       search: searchParams.get("search") ?? undefined,
+      viewerRole: auth.profile.role,
     });
     return apiSuccess(result);
   } catch (e) {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     const forcedRole = auth.profile.role === "librarian" ? ("member" as const) : undefined;
     const member = await createMember(parsed.data, { forcedRole });
     revalidatePath("/admin/members");
+    revalidatePath("/librarian/members");
     return apiSuccess(member, 201);
   } catch (e) {
     return apiError(sanitizeError(e), 500);
@@ -58,9 +60,11 @@ export async function PATCH(request: NextRequest) {
     if (!parsed.success) {
       return apiError(parsed.error.issues[0]?.message ?? "Invalid input");
     }
-    await updateMember(id, parsed.data);
+    await updateMember(id, parsed.data, auth.profile.role);
     revalidatePath("/admin/members");
     revalidatePath(`/admin/members/${id}`);
+    revalidatePath("/librarian/members");
+    revalidatePath(`/librarian/members/${id}`);
     return apiSuccess({ ok: true });
   } catch (e) {
     return apiError(sanitizeError(e), 500);

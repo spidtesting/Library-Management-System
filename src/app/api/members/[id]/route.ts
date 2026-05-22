@@ -15,7 +15,7 @@ export async function GET(
 
   try {
     const { id } = await params;
-    const member = await getMemberById(id);
+    const member = await getMemberById(id, auth.profile.role);
     if (!member) return apiError("Member not found", 404);
     return apiSuccess(member);
   } catch (e) {
@@ -39,6 +39,7 @@ export async function DELETE(
     }
     await deleteMember(id);
     revalidatePath("/admin/members");
+    revalidatePath("/librarian/members");
     return apiSuccess({ ok: true });
   } catch (e) {
     return apiError(sanitizeError(e), 500);

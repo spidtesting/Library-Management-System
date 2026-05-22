@@ -9,24 +9,24 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const member = await getMemberById(id, "admin");
+  const member = await getMemberById(id, "librarian");
   return { title: member ? `${member.full_name} | Members` : "Member" };
 }
 
-export default async function MemberDetailPage({
+export default async function LibrarianMemberDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const profile = await requirePortalRole(["admin", "librarian"]);
+  await requirePortalRole(["librarian", "admin"]);
   const { id } = await params;
 
   return (
     <MemberDetailView
       id={id}
-      viewerRole={profile.role}
-      listPath="/admin/members"
-      canDelete={profile.role === "admin"}
+      viewerRole="librarian"
+      listPath="/librarian/members"
+      canDelete={false}
     />
   );
 }

@@ -7,20 +7,20 @@ import { MemberCreateDialog } from "@/components/features/members/MemberCreateDi
 import { requirePortalRole } from "@/lib/portal-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const metadata: Metadata = { title: "Members | Admin" };
+export const metadata: Metadata = { title: "Members | Librarian" };
 
-export default async function AdminMembersPage({
+export default async function LibrarianMembersPage({
   searchParams,
 }: {
   searchParams: Promise<{ search?: string; status?: string }>;
 }) {
-  const profile = await requirePortalRole(["admin", "librarian"]);
+  const profile = await requirePortalRole(["librarian", "admin"]);
   const params = await searchParams;
 
   let { data: members } = await getMembers({
     pageSize: 100,
     search: params.search,
-    viewerRole: profile.role,
+    viewerRole: "librarian",
   });
 
   if (params.status === "active") {
@@ -32,20 +32,16 @@ export default async function AdminMembersPage({
   return (
     <div>
       <PageHeader
-        title={profile.role === "admin" ? "Accounts" : "Members"}
-        description={
-          profile.role === "admin"
-            ? "Members, librarians, and admins — create accounts and manage access"
-            : "Library members who can borrow books"
-        }
+        title="Members"
+        description="Library members who can borrow books"
         action={<MemberCreateDialog actorRole={profile.role} />}
       />
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <MembersClient
           initialMembers={members}
-          canDelete={profile.role === "admin"}
-          viewerRole={profile.role}
-          listPath="/admin/members"
+          canDelete={false}
+          viewerRole="librarian"
+          listPath="/librarian/members"
         />
       </Suspense>
     </div>

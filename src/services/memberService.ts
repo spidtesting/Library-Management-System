@@ -9,10 +9,13 @@ import type { MemberCreateInput } from "@/lib/validations";
 import { PROFILE_COLUMNS } from "@/lib/profile-columns";
 import { normalizeNic } from "@/lib/nic";
 
+const STAFF_LIST_ROLES: UserRole[] = ["member", "librarian", "admin"];
+
 export async function getMembers(params: {
   page?: number;
   pageSize?: number;
   search?: string;
+  viewerRole: UserRole;
 }): Promise<PaginatedResponse<Profile>> {
   const supabase = await createClient();
   const page = params.page ?? 1;
@@ -22,8 +25,14 @@ export async function getMembers(params: {
   let query = supabase
     .from("profiles")
     .select(PROFILE_COLUMNS, { count: "exact" })
-    .eq("role", "member")
+    .order("role")
     .order("full_name");
+
+  if (params.viewerRole === "admin") {
+    query = query.in("role", STAFF_LIST_ROLES);
+  } else {
+    query = query.eq("role", "member");
+  }
 
   if (params.search) {
     query = query.or(
@@ -44,14 +53,18 @@ export async function getMembers(params: {
   };
 }
 
-export async function getMemberById(id: string): Promise<Profile | null> {
+export async function getMemberById(
+  id: string,
+  viewerRole: UserRole = "librarian"
+): Promise<Profile | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(PROFILE_COLUMNS)
-    .eq("id", id)
-    .eq("role", "member")
-    .single();
+  let query = supabase.from("profiles").select(PROFILE_COLUMNS).eq("id", id);
+  if (viewerRole !== "admin") {
+    query = query.eq("role", "member");
+  } else {
+    query = query.in("role", STAFF_LIST_ROLES);
+  }
+  const { data, error } = await query.single();
   if (error) return null;
   return data as Profile;
 }
@@ -100,17 +113,18 @@ export async function getMemberPendingFinesTotal(memberId: string): Promise<numb
 
 export async function updateMember(
   id: string,
-  updates: Partial<Pick<Profile, "is_active" | "borrow_token_limit" | "full_name" | "phone" | "address">>
+  updates: Partial<Pick<Profile, "is_active" | "borrow_token_limit" | "full_name" | "phone" | "address">>,
+  viewerRole: UserRole = "librarian"
 ) {
   const supabase = await createClient();
   const payload = emptyToNull(updates as Record<string, unknown>);
-  const { data, error } = await supabase
-    .from("profiles")
-    .update(payload)
-    .eq("id", id)
-    .eq("role", "member")
-    .select("id")
-    .maybeSingle();
+  let query = supabase.from("profiles").update(payload).eq("id", id);
+  if (viewerRole !== "admin") {
+    query = query.eq("role", "member");
+  } else {
+    query = query.in("role", STAFF_LIST_ROLES);
+  }
+  const { data, error } = await query.select("id").maybeSingle();
   if (error) {
     throw new Error(
       error.message.includes("row-level security")

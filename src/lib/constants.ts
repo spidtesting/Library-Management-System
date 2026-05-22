@@ -38,6 +38,7 @@ export const ADMIN_NAV = [
 export const LIBRARIAN_NAV = [
   { href: "/librarian/dashboard", label: "Dashboard" },
   { href: "/librarian/books", label: "Books" },
+  { href: "/librarian/members", label: "Members" },
   { href: "/librarian/issue", label: "Issue" },
   { href: "/librarian/returns", label: "Returns" },
 ] as const;

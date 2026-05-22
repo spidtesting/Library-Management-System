@@ -15,10 +15,13 @@ import { parseApiResponse } from "@/lib/parse-api-response";
 export function MemberEditForm({
   member,
   canDelete = false,
+  listPath = "/admin/members",
 }: {
   member: Profile;
   canDelete?: boolean;
+  listPath?: string;
 }) {
+  const isLibraryMember = member.role === "member";
   const router = useRouter();
   const {
     register,
@@ -48,7 +51,7 @@ export function MemberEditForm({
       toast.error(data.error ?? "Update failed");
       return;
     }
-    toast.success("Member updated");
+    toast.success(isLibraryMember ? "Member updated" : "Account updated");
     router.refresh();
   }
 
@@ -66,18 +69,20 @@ export function MemberEditForm({
       toast.error(data.error ?? "Delete failed");
       return;
     }
-    toast.success("Member deleted");
-    router.push("/admin/members");
+    toast.success("Account deleted");
+    router.push(listPath);
     router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-md space-y-4">
-      <div className="space-y-2">
-        <Label>NIC number</Label>
-        <Input value={member.nic_number ?? "—"} disabled className="bg-muted font-mono" />
-        <p className="text-xs text-muted-foreground">NIC cannot be changed after creation.</p>
-      </div>
+      {isLibraryMember && (
+        <div className="space-y-2">
+          <Label>NIC number</Label>
+          <Input value={member.nic_number ?? "—"} disabled className="bg-muted font-mono" />
+          <p className="text-xs text-muted-foreground">NIC cannot be changed after creation.</p>
+        </div>
+      )}
       <div className="space-y-2">
         <Label>Email</Label>
         <Input value={member.email} disabled className="bg-muted" />
@@ -91,36 +96,40 @@ export function MemberEditForm({
       <Field label="Address" id="address">
         <Input id="address" {...register("address")} />
       </Field>
-      <Field
-        label="Max books at once"
-        id="borrow_token_limit"
-        error={errors.borrow_token_limit?.message}
-      >
-        <Input
-          id="borrow_token_limit"
-          type="number"
-          min={1}
-          max={20}
-          {...register("borrow_token_limit", { valueAsNumber: true })}
-        />
-      </Field>
-      <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-        <div className="flex items-start gap-2">
-          <Checkbox
-            id="is_active"
-            checked={watch("is_active")}
-            onCheckedChange={(v) => setValue("is_active", v === true)}
-          />
-          <div>
-            <Label htmlFor="is_active" className="font-normal cursor-pointer">
-              Can borrow books
-            </Label>
-            <p className="text-xs text-muted-foreground">
-              When off, librarians cannot issue books to this member and they cannot reserve titles.
-            </p>
+      {isLibraryMember && (
+        <>
+          <Field
+            label="Max books at once"
+            id="borrow_token_limit"
+            error={errors.borrow_token_limit?.message}
+          >
+            <Input
+              id="borrow_token_limit"
+              type="number"
+              min={1}
+              max={20}
+              {...register("borrow_token_limit", { valueAsNumber: true })}
+            />
+          </Field>
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="is_active"
+                checked={watch("is_active")}
+                onCheckedChange={(v) => setValue("is_active", v === true)}
+              />
+              <div>
+                <Label htmlFor="is_active" className="font-normal cursor-pointer">
+                  Can borrow books
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  When off, staff cannot issue books to this member and they cannot reserve titles.
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
       <div className="flex flex-wrap gap-2">
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving…" : "Save changes"}
