@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { getBookById } from "@/services/bookService";
+import { getAuthors, getBookById, getCategories } from "@/services/bookService";
 import { BookEditForm } from "@/components/features/books/BookEditForm";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,11 @@ export default async function AdminBookDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const book = await getBookById(id);
+  const [book, categories, authors] = await Promise.all([
+    getBookById(id),
+    getCategories(),
+    getAuthors(),
+  ]);
   if (!book) notFound();
 
   return (
@@ -37,7 +41,13 @@ export default async function AdminBookDetailPage({
           </Link>
         }
       />
-      <BookEditForm book={book} listPath="/admin/books" canDelete />
+      <BookEditForm
+        book={book}
+        categories={categories}
+        authors={authors}
+        listPath="/admin/books"
+        canDelete
+      />
     </div>
   );
 }

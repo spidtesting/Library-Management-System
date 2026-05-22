@@ -20,8 +20,17 @@ import {
 import { SectionCard } from "@/components/ui/section-card";
 import { toast } from "sonner";
 import { parseApiResponse } from "@/lib/parse-api-response";
+import type { Author, Category } from "@/types";
 
-export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
+export function BookForm({
+  listPath = "/admin/books",
+  categories,
+  authors = [],
+}: {
+  listPath?: string;
+  categories: Category[];
+  authors?: Author[];
+}) {
   const router = useRouter();
   const [coverBase64, setCoverBase64] = useState<string | null>(null);
 
@@ -41,6 +50,7 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
   });
 
   const status = watch("status");
+  const categoryId = watch("category_id");
 
   async function onSubmit(values: BookInput) {
     const payload: BookInput = {
@@ -80,6 +90,40 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
           </Field>
           <Field label="Subtitle" id="subtitle" error={errors.subtitle?.message} className="sm:col-span-2">
             <Input id="subtitle" {...register("subtitle")} />
+          </Field>
+          <Field label="Author *" id="author_name" error={errors.author_name?.message}>
+            <Input
+              id="author_name"
+              list="book-author-suggestions"
+              placeholder="e.g. Jane Austen"
+              autoComplete="off"
+              {...register("author_name")}
+            />
+            <datalist id="book-author-suggestions">
+              {authors.map((a) => (
+                <option key={a.id} value={a.name} />
+              ))}
+            </datalist>
+          </Field>
+          <Field label="Category" id="category_id" error={errors.category_id?.message}>
+            <Select
+              value={categoryId ?? "none"}
+              onValueChange={(v) =>
+                setValue("category_id", v === "none" ? null : v, { shouldValidate: true })
+              }
+            >
+              <SelectTrigger id="category_id">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No category</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </Field>
           <Field label="ISBN" id="isbn" error={errors.isbn?.message}>
             <Input id="isbn" {...register("isbn")} />

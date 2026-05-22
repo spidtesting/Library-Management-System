@@ -15,7 +15,7 @@ export function emptyToNull<T extends Record<string, unknown>>(obj: T): T {
 export function sanitizeBookInput(
   input: Partial<BookInput>
 ): Partial<BookInput> & { cover_url?: string | null } {
-  const { cover_base64, ...rest } = input;
+  const { cover_base64, author_name: _authorName, ...rest } = input;
   const cleaned = emptyToNull(rest as Record<string, unknown>) as Partial<BookInput>;
   if (cleaned.isbn === null) delete cleaned.isbn;
   if (cleaned.subtitle === null) delete cleaned.subtitle;

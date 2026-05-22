@@ -4,7 +4,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { bookSchema, type BookInput } from "@/lib/validations";
-import type { Book } from "@/types";
+import type { Author, Book, Category } from "@/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { BookCoverPicker } from "@/components/features/books/BookCoverPicker";
 import { BookCoverImage } from "@/components/features/books/BookCoverImage";
 import { Button } from "@/components/ui/button";
@@ -19,10 +26,14 @@ import { isCoverDataUrl } from "@/lib/cover-image";
 
 export function BookEditForm({
   book,
+  categories,
+  authors = [],
   listPath = "/admin/books",
   canDelete = false,
 }: {
   book: Book;
+  categories: Category[];
+  authors?: Author[];
   listPath?: string;
   canDelete?: boolean;
 }) {
@@ -34,6 +45,8 @@ export function BookEditForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(bookSchema),
@@ -42,6 +55,8 @@ export function BookEditForm({
       subtitle: book.subtitle ?? "",
       isbn: book.isbn ?? "",
       description: book.description ?? "",
+      author_name: book.author?.name ?? "",
+      category_id: book.category_id,
       language: book.language,
       total_copies: book.total_copies,
       shelf_number: book.shelf_number ?? "",
@@ -49,6 +64,8 @@ export function BookEditForm({
       status: book.status === "unavailable" ? "unavailable" : "available",
     },
   });
+
+  const categoryId = watch("category_id");
 
   const previewUrl = coverDirty ? coverBase64 : book.cover_url;
 
@@ -124,6 +141,40 @@ export function BookEditForm({
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Field label="Title" id="title" error={errors.title?.message}>
               <Input id="title" {...register("title")} />
+            </Field>
+            <Field label="Author *" id="author_name" error={errors.author_name?.message}>
+              <Input
+                id="author_name"
+                list="book-edit-author-suggestions"
+                placeholder="e.g. Jane Austen"
+                autoComplete="off"
+                {...register("author_name")}
+              />
+              <datalist id="book-edit-author-suggestions">
+                {authors.map((a) => (
+                  <option key={a.id} value={a.name} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Category" id="category_id" error={errors.category_id?.message}>
+              <Select
+                value={categoryId ?? "none"}
+                onValueChange={(v) =>
+                  setValue("category_id", v === "none" ? null : v, { shouldValidate: true })
+                }
+              >
+                <SelectTrigger id="category_id">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No category</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Field>
             <Field label="ISBN" id="isbn">
               <Input id="isbn" {...register("isbn")} />

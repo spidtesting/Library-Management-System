@@ -55,9 +55,16 @@ export const bookSchema = z.object({
   subtitle: optionalText,
   isbn: optionalText,
   description: optionalText,
+  author_name: z.preprocess(
+    (v) => (typeof v === "string" ? v.trim() : v),
+    z.string().min(1, "Author is required")
+  ),
   author_id: optionalUuid,
   publisher_id: optionalUuid,
-  category_id: optionalUuid,
+  category_id: z.preprocess(
+    (v) => (v === "" || v === undefined || v === "none" ? null : v),
+    z.string().uuid("Select a valid category").nullable().optional()
+  ),
   published_year: z.preprocess(
     (v) => (v === "" || v === null || v === undefined ? null : v),
     z.coerce.number().int().min(1000).max(2100).nullable().optional()
