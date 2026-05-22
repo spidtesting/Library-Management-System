@@ -83,9 +83,6 @@ export function MemberCreateDialog({ actorRole }: { actorRole: UserRole }) {
     setOpen(false);
     reset();
     router.refresh();
-    if (data.id && data.role === "member") {
-      router.push(`/admin/members/${data.id}`);
-    }
   }
 
   return (

@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   getMemberById,
   getMemberActiveBorrows,
@@ -44,7 +47,18 @@ export default async function MemberDetailPage({
 
   return (
     <div>
-      <PageHeader title={member.full_name} />
+      <PageHeader
+        title={member.full_name}
+        description="Member profile, borrows, and account settings"
+        action={
+          <Link
+            href="/admin/members"
+            className={cn(buttonVariants({ variant: "outline" }))}
+          >
+            Back to list
+          </Link>
+        }
+      />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6">
           <MemberCard member={member} pendingFines={finesTotal} />

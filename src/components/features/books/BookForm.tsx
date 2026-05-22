@@ -63,7 +63,7 @@ export function BookForm({ listPath = "/admin/books" }: { listPath?: string }) {
       return;
     }
     toast.success("Book created");
-    router.push(`${listPath}/${data.id}`);
+    router.push(listPath);
     router.refresh();
   }
 
