@@ -34,6 +34,9 @@ yarn-error.log*
 .env*
 !.env.local.example
 
+# generated member credential sheets (contain passwords)
+data/spid-member-credentials.md
+
 # vercel
 .vercel
 

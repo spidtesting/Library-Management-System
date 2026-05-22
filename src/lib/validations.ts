@@ -114,6 +114,10 @@ export const settingsSchema = z.object({
 
 export const profileSelfUpdateSchema = z.object({
   full_name: z.string().min(2, "Name must be at least 2 characters"),
+  nic_number: z.preprocess(
+    (v) => (v === "" || v === undefined ? null : v),
+    nicNumberSchema.nullable().optional()
+  ),
   phone: z.preprocess(
     (v) => (v === "" || v === undefined ? null : v),
     z.string().nullable().optional()

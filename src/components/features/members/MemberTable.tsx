@@ -78,7 +78,7 @@ export function MemberTable({
   async function deleteMember(member: Profile) {
     if (
       !confirm(
-        `Delete ${member.full_name}? This removes their login and profile permanently.`
+        `Delete ${member.full_name}? This permanently removes their login, profile, and borrow history.`
       )
     ) {
       return;

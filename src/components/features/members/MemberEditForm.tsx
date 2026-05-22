@@ -58,7 +58,7 @@ export function MemberEditForm({
   async function onDelete() {
     if (
       !confirm(
-        `Delete ${member.full_name}? This permanently removes their account.`
+        `Delete ${member.full_name}? This permanently removes their account and borrow history.`
       )
     ) {
       return;

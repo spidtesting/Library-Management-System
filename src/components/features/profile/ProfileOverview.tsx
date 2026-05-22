@@ -46,11 +46,11 @@ export function ProfileOverview({ profile }: { profile: Profile }) {
     >
       <div className="space-y-4 text-sm">
         <ProfileDetail icon={Mail} label="Email" value={profile.email} />
-        {isMember && profile.nic_number && (
+        {isMember && (
           <ProfileDetail
             icon={CreditCard}
             label="NIC number"
-            value={profile.nic_number}
+            value={profile.nic_number ?? "Not set — add in Edit profile"}
           />
         )}
         <ProfileDetail

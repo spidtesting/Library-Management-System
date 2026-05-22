@@ -2,6 +2,7 @@ import { createClient } from "@/services/supabase/server";
 import type { Profile } from "@/types";
 import type { ProfileSelfUpdateInput } from "@/lib/validations";
 import { emptyToNull } from "@/lib/sanitize-input";
+import { normalizeNic } from "@/lib/nic";
 
 import { PROFILE_COLUMNS } from "@/lib/profile-columns";
 
@@ -23,6 +24,9 @@ export async function updateOwnProfile(
 ): Promise<Profile> {
   const supabase = await createClient();
   const payload = emptyToNull(input as Record<string, unknown>);
+  if (typeof payload.nic_number === "string") {
+    payload.nic_number = normalizeNic(payload.nic_number);
+  }
 
   const { data, error } = await supabase
     .from("profiles")

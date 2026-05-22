@@ -278,8 +278,34 @@ export async function deleteMember(id: string): Promise<void> {
   }
 
   const admin = createAdminClient();
+
+  // FK: issued_books.member_id and fines.member_id are ON DELETE RESTRICT — must
+  // remove borrow/fine rows before auth.users delete cascades to profiles.
+  const { error: issuesError } = await admin
+    .from("issued_books")
+    .delete()
+    .eq("member_id", id);
+
+  if (issuesError) {
+    throw new Error(`deleteMember failed: could not remove borrow history (${issuesError.message})`);
+  }
+
+  const { error: finesError } = await admin.from("fines").delete().eq("member_id", id);
+
+  if (finesError) {
+    throw new Error(`deleteMember failed: could not remove fines (${finesError.message})`);
+  }
+
   const { error: authError } = await admin.auth.admin.deleteUser(id);
-  if (authError) throw new Error(`deleteMember failed: ${authError.message}`);
+  if (authError) {
+    const msg = authError.message.toLowerCase();
+    if (msg.includes("database")) {
+      throw new Error(
+        "deleteMember failed: account still has linked library records. Return all books, then try again, or disable borrow access instead of deleting."
+      );
+    }
+    throw new Error(`deleteMember failed: ${authError.message}`);
+  }
 }
 
 export async function countActiveBorrows(memberId: string): Promise<number> {
