@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CATALOGUE_PAGE_SIZE } from "@/lib/constants";
 import { getBooks, getCategories } from "@/services/bookService";
 import { BooksClient } from "@/components/features/books/BooksClient";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,11 +21,12 @@ export default async function AdminBooksPage({
   }>;
 }) {
   const params = await searchParams;
-  const [{ data: books }, categories] = await Promise.all([
+  const [booksResult, categories] = await Promise.all([
     getBooks({
       search: params.search,
       categoryId: params.categoryId,
       availableOnly: params.availableOnly === "true",
+      pageSize: CATALOGUE_PAGE_SIZE,
     }),
     getCategories(),
   ]);
@@ -42,7 +44,8 @@ export default async function AdminBooksPage({
       />
       <Suspense fallback={<p>Loading…</p>}>
         <BooksClient
-          initialBooks={books}
+          initialBooks={booksResult.data}
+          totalCount={booksResult.count}
           categories={categories}
           basePath="/admin/books"
         />

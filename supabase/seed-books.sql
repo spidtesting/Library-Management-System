@@ -3,8 +3,7 @@
 -- Run in Supabase Dashboard → SQL Editor
 -- Prerequisites: library_schema.sql applied
 -- Safe to re-run: skips duplicate ISBNs and same title+author.
-
-BEGIN;
+-- No TEMP tables (Supabase SQL Editor runs statements separately).
 
 -- Categories from spreadsheet
 INSERT INTO categories (name, description) VALUES ('General', 'Imported from Books.xlsx') ON CONFLICT (name) DO NOTHING;
@@ -154,17 +153,9 @@ INSERT INTO authors (name) VALUES ('සූහර්ශනි ධර්මරත�
 INSERT INTO authors (name) VALUES ('හෂාන් රන්දික ඩයස්') ON CONFLICT (name) DO NOTHING;
 INSERT INTO authors (name) VALUES ('හේමපාල මුනිදාස') ON CONFLICT (name) DO NOTHING;
 
-CREATE TEMP TABLE books_import (
-  legacy_book_id TEXT,
-  title          TEXT NOT NULL,
-  author_name    TEXT NOT NULL,
-  isbn           TEXT,
-  category_name  TEXT NOT NULL,
-  book_status    book_status NOT NULL DEFAULT 'available',
-  language       TEXT NOT NULL DEFAULT 'Sinhala'
-) ON COMMIT DROP;
-
-INSERT INTO books_import (legacy_book_id, title, author_name, isbn, category_name, book_status, language) VALUES
+-- Import books (single statement — paste from WITH through ON CONFLICT if categories/authors already exist)
+WITH books_import (legacy_book_id, title, author_name, isbn, category_name, book_status, language) AS (
+  VALUES
   ('1', 'ගුරු ගිතය', 'චිංගිස් අයිත්මාතව්', NULL, 'පරිවර්තන පොත්', 'available'::book_status, 'Sinhala'),
   ('2', 'රූපාන්තරණය', 'කැත්ලින් ජයවර්ධන', '9789556613582', 'කෙටි කතා පොත්', 'available'::book_status, 'Sinhala'),
   ('3', 'අම්මා', 'මැක්සිම් ගෝර්කි', NULL, 'පරිවර්තන පොත්', 'available'::book_status, 'Sinhala'),
@@ -364,9 +355,8 @@ INSERT INTO books_import (legacy_book_id, title, author_name, isbn, category_nam
   ('214', 'කළුවර ගෙදර', 'මාටින් වික්‍රමසිංහ', '9784550201419', 'නවකතා පොත්', 'available'::book_status, 'Sinhala'),
   ('215', 'ලස්සන වසිලිස්සා', 'දැදිගම පී රුද්‍රි ගෝ', '9555911045', 'පරිවර්තන පොත්', 'available'::book_status, 'Sinhala'),
   ('216', 'යකඩ සිල්පර', 'විමල් උදය හපුගොඩආරච්චි', '9789556776355', 'නවකතා පොත්', 'available'::book_status, 'Sinhala'),
-  ('217', 'අටවක පුත්තු', 'ලියනගේ අමරකිර්ති', '9786245087457', 'General', 'available'::book_status, 'Sinhala');
-
--- Books with ISBN (skip duplicate ISBN)
+  ('217', 'අටවක පුත්තු', 'ලියනගේ අමරකිර්ති', '9786245087457', 'General', 'available'::book_status, 'Sinhala')
+)
 INSERT INTO books (
   title, isbn, author_id, category_id, language,
   total_copies, available_copies, status, tags
@@ -377,50 +367,27 @@ SELECT
   a.id,
   c.id,
   bi.language,
-  1, 1,
+  1,
+  1,
   bi.book_status,
   ARRAY['legacy_book_id:' || bi.legacy_book_id]
 FROM books_import bi
 JOIN authors a ON a.name = bi.author_name
 JOIN categories c ON c.name = bi.category_name
-WHERE bi.isbn IS NOT NULL
-  AND NOT EXISTS (
+WHERE NOT EXISTS (
+  SELECT 1 FROM books b
+  WHERE b.deleted_at IS NULL
+    AND lower(b.title) = lower(bi.title)
+    AND b.author_id = a.id
+)
+AND (
+  bi.isbn IS NULL
+  OR NOT EXISTS (
     SELECT 1 FROM books b
     WHERE b.deleted_at IS NULL AND b.isbn = bi.isbn
   )
-  AND NOT EXISTS (
-    SELECT 1 FROM books b
-    WHERE b.deleted_at IS NULL
-      AND lower(b.title) = lower(bi.title)
-      AND b.author_id = a.id
-  )
-ON CONFLICT (isbn) DO NOTHING;
-
--- Books without ISBN
-INSERT INTO books (
-  title, author_id, category_id, language,
-  total_copies, available_copies, status, tags
 )
-SELECT
-  bi.title,
-  a.id,
-  c.id,
-  bi.language,
-  1, 1,
-  bi.book_status,
-  ARRAY['legacy_book_id:' || bi.legacy_book_id]
-FROM books_import bi
-JOIN authors a ON a.name = bi.author_name
-JOIN categories c ON c.name = bi.category_name
-WHERE bi.isbn IS NULL
-  AND NOT EXISTS (
-    SELECT 1 FROM books b
-    WHERE b.deleted_at IS NULL
-      AND lower(b.title) = lower(bi.title)
-      AND b.author_id = a.id
-  );
-
-COMMIT;
+ON CONFLICT (isbn) DO NOTHING;
 
 SELECT count(*) AS total_books FROM books WHERE deleted_at IS NULL;
 SELECT count(*) AS imported_with_legacy_tag FROM books WHERE deleted_at IS NULL AND EXISTS (SELECT 1 FROM unnest(tags) t WHERE t LIKE 'legacy_book_id:%');

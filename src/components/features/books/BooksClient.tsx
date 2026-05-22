@@ -11,10 +11,12 @@ import { useDebounce } from "@/hooks/useDebounce";
 
 export function BooksClient({
   initialBooks,
+  totalCount,
   categories,
   basePath,
 }: {
   initialBooks: Book[];
+  totalCount: number;
   categories: Category[];
   basePath: string;
 }) {
@@ -71,7 +73,11 @@ export function BooksClient({
       </div>
       <SectionCard
         title="Catalogue"
-        description={`${books.length} book${books.length === 1 ? "" : "s"} shown`}
+        description={
+          books.length === totalCount
+            ? `${totalCount} book${totalCount === 1 ? "" : "s"}`
+            : `${books.length} of ${totalCount} books`
+        }
         accent="blue"
       >
         <BookTable books={books} basePath={basePath} />

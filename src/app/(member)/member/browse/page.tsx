@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BrowseSkeleton } from "@/components/layout/PageSkeleton";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CATALOGUE_PAGE_SIZE } from "@/lib/constants";
 import { getBooks, getCategories } from "@/services/bookService";
 import { BrowseClient } from "@/components/features/books/BrowseClient";
 
@@ -14,12 +15,12 @@ export default async function BrowsePage({
   searchParams: Promise<{ q?: string; category?: string; available?: string }>;
 }) {
   const params = await searchParams;
-  const [{ data: books }, categories] = await Promise.all([
+  const [booksResult, categories] = await Promise.all([
     getBooks({
       search: params.q,
       categoryId: params.category,
       availableOnly: params.available === "true",
-      pageSize: 24,
+      pageSize: CATALOGUE_PAGE_SIZE,
     }),
     getCategories(),
   ]);
@@ -28,7 +29,11 @@ export default async function BrowsePage({
     <div>
       <PageHeader title="Browse books" description="Search and reserve titles" />
       <Suspense fallback={<BrowseSkeleton />}>
-        <BrowseClient initialBooks={books} categories={categories} />
+        <BrowseClient
+          initialBooks={booksResult.data}
+          totalCount={booksResult.count}
+          categories={categories}
+        />
       </Suspense>
     </div>
   );

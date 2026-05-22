@@ -2,6 +2,8 @@ export const BORROW_LIMIT = 3;
 export const FINE_RATE = 5;
 export const MAX_BORROW_DAYS = 14;
 export const DEFAULT_PAGE_SIZE = 20;
+/** Book catalogue lists (admin / librarian / browse) — load full library in one page */
+export const CATALOGUE_PAGE_SIZE = 500;
 export const MAX_COVER_SIZE_BYTES = 2 * 1024 * 1024;
 export const ALLOWED_COVER_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const RECENTLY_VIEWED_KEY = "recently_viewed";

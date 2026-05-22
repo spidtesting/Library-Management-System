@@ -19,9 +19,11 @@ import { BookCard } from "./BookCard";
 
 export function BrowseClient({
   initialBooks,
+  totalCount,
   categories,
 }: {
   initialBooks: Book[];
+  totalCount: number;
   categories: Category[];
 }) {
   const router = useRouter();
@@ -89,6 +91,11 @@ export function BrowseClient({
           </Label>
         </div>
       </div>
+      <p className="text-sm text-muted-foreground">
+        {initialBooks.length === totalCount
+          ? `${totalCount} book${totalCount === 1 ? "" : "s"}`
+          : `${initialBooks.length} of ${totalCount} books`}
+      </p>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {initialBooks.map((book) => (
           <BookCard

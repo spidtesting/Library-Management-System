@@ -74,11 +74,10 @@ const authors = [...new Set(books.map((b) => b.author))].sort();
 const lines = [];
 lines.push(`-- Bulk import books from Books.xlsx (${books.length} titles)`);
 lines.push(`-- Generated: ${new Date().toISOString().slice(0, 10)}`);
-lines.push(`-- Run in Supabase Dashboard → SQL Editor`);
+lines.push(`-- Run in Supabase Dashboard → SQL Editor (paste ALL, then Run once)`);
 lines.push(`-- Prerequisites: library_schema.sql applied`);
 lines.push(`-- Safe to re-run: skips duplicate ISBNs and same title+author.`);
-lines.push("");
-lines.push("BEGIN;");
+lines.push(`-- Note: No TEMP tables — Supabase splits statements and would drop them.`);
 lines.push("");
 
 lines.push("-- Categories from spreadsheet");
@@ -97,26 +96,16 @@ for (const name of authors) {
 }
 lines.push("");
 
-lines.push(`CREATE TEMP TABLE books_import (
-  legacy_book_id TEXT,
-  title          TEXT NOT NULL,
-  author_name    TEXT NOT NULL,
-  isbn           TEXT,
-  category_name  TEXT NOT NULL,
-  book_status    book_status NOT NULL DEFAULT 'available',
-  language       TEXT NOT NULL DEFAULT 'Sinhala'
-) ON COMMIT DROP;`);
-lines.push("");
-
-lines.push("INSERT INTO books_import (legacy_book_id, title, author_name, isbn, category_name, book_status, language) VALUES");
 const valueLines = books.map((b) => {
   const isbnSql = b.isbn ? `'${esc(b.isbn)}'` : "NULL";
   return `  ('${esc(b.book_id)}', '${esc(b.title)}', '${esc(b.author)}', ${isbnSql}, '${esc(b.category)}', '${b.status}'::book_status, '${esc(b.language)}')`;
 });
-lines.push(valueLines.join(",\n") + ";");
-lines.push("");
 
-lines.push(`-- Books with ISBN (skip duplicate ISBN)
+lines.push(`-- Import books (single statement — required for Supabase SQL Editor)`);
+lines.push(`WITH books_import (legacy_book_id, title, author_name, isbn, category_name, book_status, language) AS (`);
+lines.push("  VALUES");
+lines.push(valueLines.join(",\n"));
+lines.push(`)
 INSERT INTO books (
   title, isbn, author_id, category_id, language,
   total_copies, available_copies, status, tags
@@ -127,51 +116,27 @@ SELECT
   a.id,
   c.id,
   bi.language,
-  1, 1,
+  1,
+  1,
   bi.book_status,
   ARRAY['legacy_book_id:' || bi.legacy_book_id]
 FROM books_import bi
 JOIN authors a ON a.name = bi.author_name
 JOIN categories c ON c.name = bi.category_name
-WHERE bi.isbn IS NOT NULL
-  AND NOT EXISTS (
+WHERE NOT EXISTS (
+  SELECT 1 FROM books b
+  WHERE b.deleted_at IS NULL
+    AND lower(b.title) = lower(bi.title)
+    AND b.author_id = a.id
+)
+AND (
+  bi.isbn IS NULL
+  OR NOT EXISTS (
     SELECT 1 FROM books b
     WHERE b.deleted_at IS NULL AND b.isbn = bi.isbn
   )
-  AND NOT EXISTS (
-    SELECT 1 FROM books b
-    WHERE b.deleted_at IS NULL
-      AND lower(b.title) = lower(bi.title)
-      AND b.author_id = a.id
-  )
-ON CONFLICT (isbn) DO NOTHING;`);
-lines.push("");
-
-lines.push(`-- Books without ISBN
-INSERT INTO books (
-  title, author_id, category_id, language,
-  total_copies, available_copies, status, tags
 )
-SELECT
-  bi.title,
-  a.id,
-  c.id,
-  bi.language,
-  1, 1,
-  bi.book_status,
-  ARRAY['legacy_book_id:' || bi.legacy_book_id]
-FROM books_import bi
-JOIN authors a ON a.name = bi.author_name
-JOIN categories c ON c.name = bi.category_name
-WHERE bi.isbn IS NULL
-  AND NOT EXISTS (
-    SELECT 1 FROM books b
-    WHERE b.deleted_at IS NULL
-      AND lower(b.title) = lower(bi.title)
-      AND b.author_id = a.id
-  );`);
-lines.push("");
-lines.push("COMMIT;");
+ON CONFLICT (isbn) DO NOTHING;`);
 lines.push("");
 lines.push("SELECT count(*) AS total_books FROM books WHERE deleted_at IS NULL;");
 lines.push(
