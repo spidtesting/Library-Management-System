@@ -16,7 +16,8 @@
     "fix-auth-trigger": "node scripts/fix-auth-trigger.mjs",
     "apply-nic-migration": "node scripts/apply-nic-migration.mjs",
     "check-env": "node scripts/check-supabase-env.mjs",
-    "seed-spid-members": "node scripts/seed-spid-members.mjs"
+    "seed-spid-members": "node scripts/seed-spid-members.mjs",
+    "generate-books-seed": "node scripts/generate-books-seed.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
