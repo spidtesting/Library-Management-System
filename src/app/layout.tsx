@@ -38,9 +38,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} min-h-dvh antialiased`}
     >
-      <body className="flex min-h-dvh flex-col supports-[min-height:100dvh]:min-h-dvh">
+      <body className="min-h-dvh supports-[min-height:100dvh]:min-h-dvh">
         <ThemeProvider>
           {children}
           <Toaster />
